@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Plan de estudio</title>
+<style>
+:root{--bg:#f4f5f8;--card:#fff;--tx:#1b1f27;--mu:#667085;--bd:#e2e5ec;--pri:#2563eb;--prit:#fff;--ok:#15803d;--okb:#dcfce7;--warn:#b45309;--warnb:#fef3c7;--bad:#b91c1c;--badb:#fee2e2;--chip:#eef1f6;--inf:#1d4ed8;--infb:#dbeafe}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1117;--card:#171b24;--tx:#e8ebf2;--mu:#9aa4b5;--bd:#293040;--pri:#6b9bff;--prit:#0b1020;--ok:#4ade80;--okb:#12301f;--warn:#fbbf24;--warnb:#3a2c0b;--bad:#f87171;--badb:#3b1414;--chip:#222838;--inf:#93b4ff;--infb:#16254a}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+#app{max-width:680px;margin:0 auto;padding:12px 12px 8px}
+h2{font-size:1.05rem;margin:18px 2px 8px}
+h3{margin:0 0 10px;font-size:1.1rem}
+.mu{color:var(--mu);font-size:.86rem}
+.card,.task,.hero{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:10px}
+.hero .hd{font-size:1.25rem;font-weight:700;text-transform:capitalize}
+.hero .hr{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border-radius:99px;padding:3px 10px;font-size:.84rem;font-weight:600;white-space:nowrap}
+.chip i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.btn{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 13px;font:inherit;font-size:.92rem;cursor:pointer}
+.btn.pri{background:var(--pri);color:var(--prit);border-color:var(--pri);font-weight:600}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:5px 9px;font-size:.82rem}
+.btn:active{opacity:.7}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.sp{justify-content:space-between}
+.grow{flex:1;min-width:0}
+.banner{border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:.9rem;border:1px solid}
+.banner.bad{background:var(--badb);color:var(--bad);border-color:var(--bad);font-weight:600}
+.banner.warn{background:var(--warnb);color:var(--warn);border-color:var(--warn)}
+.banner.inf{background:var(--infb);color:var(--inf);border-color:var(--inf)}
+.banner .btn{margin-top:6px}
+.task{border-left:6px solid var(--sc,var(--pri))}
+.task.done{opacity:.72}
+.tt{display:flex;justify-content:space-between;gap:8px}
+.tr{text-align:right;white-space:nowrap}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;border-radius:6px;padding:1px 7px;margin-bottom:3px;background:var(--chip)}
+.pill.new{background:var(--infb);color:var(--inf)}
+.pill.review{background:var(--okb);color:var(--ok)}
+.pill.test{background:var(--warnb);color:var(--warn)}
+.tmr{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.tk{font-variant-numeric:tabular-nums;font-size:1.15rem}.tk.over{color:var(--warn)}
+.tb{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.tb button{border:1px solid var(--bd);background:var(--chip);color:var(--tx);border-radius:10px;padding:10px 4px;font:inherit;font-size:.9rem;cursor:pointer}
+.tb button.on.done{background:var(--ok);color:var(--prit);border-color:var(--ok)}
+.tb button.on.half{background:var(--warn);color:var(--prit);border-color:var(--warn)}
+.tb button.on.missed{background:var(--bad);color:var(--prit);border-color:var(--bad)}
+.bar{height:8px;border-radius:99px;background:var(--chip);overflow:hidden;margin:6px 0}
+.bar>i{display:block;height:100%;background:var(--pri);border-radius:99px}
+.bar.b2>i{background:var(--ok)}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+.nav button{flex:1;border:0;background:none;color:var(--mu);padding:8px 2px 9px;font:inherit;font-size:.72rem;cursor:pointer}
+.nav button b{display:block;font-size:1.25rem;font-weight:400}
+.nav button.on{color:var(--pri);font-weight:700}
+.seg{display:inline-flex;border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--card);color:var(--tx);padding:7px 14px;font:inherit;font-size:.9rem;cursor:pointer}
+.seg button.on{background:var(--pri);color:var(--prit);font-weight:600}
+.wrow{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:9px 10px;margin-bottom:6px;color:var(--tx);font:inherit;cursor:pointer}
+.wrow.today{border-color:var(--pri);box-shadow:0 0 0 1px var(--pri)}
+.wd{width:44px;text-align:center;line-height:1.1}
+.wd b{display:block;font-size:.78rem;text-transform:uppercase;color:var(--mu)}
+.wd span{font-size:1.25rem;font-weight:700}
+.wl{text-align:right;font-size:.82rem;color:var(--mu);white-space:nowrap}
+.evt{display:inline-block;font-size:.72rem;font-weight:700;border-radius:6px;padding:1px 6px;margin:2px 3px 0 0;color:#fff;background:var(--ec)}
+.mgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mh{text-align:center;font-size:.72rem;color:var(--mu);font-weight:700}
+.evl{font-size:.8rem;margin-top:3px;line-height:1.3}
+.ml{font-size:.58rem;line-height:1.2;border-radius:3px;padding:0 2px;margin-top:2px;background:var(--ec);color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:left}
+.mc{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;min-height:84px;padding:3px;font:inherit;text-align:center;cursor:pointer;position:relative;overflow:hidden}
+.mc.today{border-color:var(--pri);box-shadow:0 0 0 1px var(--pri)}
+.mc.out{opacity:.35}
+.mc .tp{height:4px;border-radius:2px;margin-bottom:2px}
+.mc b{display:block;font-size:.9rem}
+.mc small{display:block;font-size:.66rem;color:var(--mu)}
+.mc .dots{display:flex;justify-content:center;gap:2px;margin-top:2px}
+.mc .dots i{width:7px;height:7px;border-radius:50%;background:var(--ec)}
+label{display:block;font-size:.84rem;color:var(--mu);margin:8px 0 0}
+input,select,textarea{width:100%;font:inherit;font-size:1rem;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px;margin-top:3px}
+textarea{min-height:110px}
+input[type=checkbox]{width:auto;margin:0 6px 0 0}
+label.chk{display:flex;align-items:center;color:var(--tx)}
+.mb{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#modal.open{display:flex}
+.sheet{background:var(--card);width:100%;max-width:680px;max-height:90vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+@media(min-width:700px){#modal{align-items:center}.sheet{border-radius:18px}}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:.9rem;z-index:30;display:none;max-width:90%;text-align:center}
+.trow{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--bd)}
+.trow .nm{flex:1;min-width:0;word-break:break-word}
+.trow .nm.dn{color:var(--mu);text-decoration:line-through}
+.dchip{border:1px solid var(--bd);background:var(--chip);color:var(--tx);border-radius:8px;padding:3px 8px;font:inherit;font-size:.76rem;cursor:pointer}
+.dchip.denso{border-color:var(--bad);color:var(--bad)}
+.dchip.ligero{border-color:var(--ok);color:var(--ok)}
+.uh{display:flex;align-items:center;gap:6px;margin-top:12px}
+.uh b{flex:1}
+.cyc{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.cc{width:42px;border:0;border-radius:9px;padding:6px 0;color:#111;font:inherit;font-weight:700;cursor:pointer;text-align:center;line-height:1.1}
+.cc small{display:block;font-size:.6rem;font-weight:400;opacity:.75}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.alert{border-left:5px solid var(--warn);background:var(--warnb);color:var(--tx);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:.9rem}
+.alert.bad{border-left-color:var(--bad);background:var(--badb)}
+.cd{display:flex;align-items:center;gap:10px}
+.cd .n{min-width:54px;text-align:center;font-weight:800;font-size:1.3rem;line-height:1}
+.cd .n small{display:block;font-size:.65rem;font-weight:400;color:var(--mu)}
+.empty{text-align:center;color:var(--mu);padding:22px 10px}
+.ag{display:flex;align-items:center;gap:10px;cursor:pointer}
+.tm{min-width:78px;font-size:.84rem;color:var(--mu)}
+.dgrid{display:flex;flex-wrap:wrap;gap:10px}
+.dgrid label.chk{margin:0;font-size:.9rem}
+pre.t{white-space:pre-wrap;word-break:break-all;max-height:40vh;overflow:auto;font-size:.72rem;background:var(--bg);padding:8px;border-radius:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav class="nav" id="nav"></nav>
+<div id="modal"></div>
+<div id="toast"></div>
+<noscript><p style="padding:20px">Esta aplicación necesita JavaScript activado.</p></noscript>
+<script>
+(function(){
+'use strict';
+/* ====== Constantes ====== */
+var SCHEMA=3, KEY='planEstudioTurnos', APP='plan-estudio-turnos';
+var CAT={gym:{n:'Gym',i:'🏋️'},comida:{n:'Comida',i:'🍽️'},cena:{n:'Cena',i:'🌙'},otro:{n:'Otro',i:'📌'}};
+var TY={manana:{n:'Mañana',l:'M',c:'#f59e0b'},tarde:{n:'Tarde',l:'T',c:'#f97316'},noche:{n:'Noche',l:'N',c:'#6366f1'},saliente:{n:'Saliente',l:'S',c:'#a855f7'},libre:{n:'Libre',l:'L',c:'#10b981'},vacaciones:{n:'Vacaciones',l:'V',c:'#06b6d4'}};
+var TYK=Object.keys(TY);
+var EV={entrega:{n:'Entrega',c:'#ef4444'},examen:{n:'Examen',c:'#a855f7'},seminario:{n:'Seminario',c:'#0ea5e9'}};
+var DF={ligero:'Ligero',normal:'Normal',denso:'Denso'};
+var DFK=['ligero','normal','denso'];
+var SUBJ=['Metodología de la Investigación I','Metodología de la Investigación II','Teoría del Conocimiento','Sistemas Sanitarios','Gestión Sanitaria','Servicios de Enfermería','Bioética y Derecho'];
+var DN=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+var DS=['dom','lun','mar','mié','jue','vie','sáb'];
+var MN=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var MS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+var DAY=86400000;
+var MINSLOT={ligero:10,normal:25,denso:50};
+var MIGRATIONS={ /* MIGRATIONS[n](data) convierte de la versión n a n+1 */
+  1:function(d){d.agenda=Array.isArray(d.agenda)?d.agenda:[];return d;}, /* v1 -> v2: agenda personal */
+  2:function(d){return d;} /* v2 -> v3: cronómetro (timer) y tiempo real (real) en tareas marcadas */
+};
+
+/* ====== Utilidades de fecha ====== */
+function p2(n){return (n<10?'0':'')+n;}
+function pd(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2]);}
+function fd(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function addD(s,n){var d=pd(s);d.setDate(d.getDate()+n);return fd(d);}
+function diffD(a,b){return Math.round((pd(b)-pd(a))/DAY);}
+function today(){return fd(new Date());}
+function mondayOf(s){var d=pd(s);return addD(s,-((d.getDay()+6)%7));}
+function longDate(s){var d=pd(s);return DN[d.getDay()]+', '+d.getDate()+' de '+MN[d.getMonth()];}
+function shortDate(s){var d=pd(s);return d.getDate()+' '+MS[d.getMonth()]+' '+d.getFullYear();}
+function fmtMin(m){m=Math.round(m);if(m<60)return m+' min';var h=Math.floor(m/60),r=m%60;return h+' h'+(r?' '+r+' min':'');}
+function rel(n){return n===0?'hoy':n===1?'mañana':n<0?'hace '+(-n)+' d':'en '+n+' días';}
+function fmtIso(iso){try{return new Date(iso).toLocaleString('es-ES',{dateStyle:'medium',timeStyle:'short'});}catch(e){return String(iso);}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);}
+function byDate(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}
+
+/* ====== Estado ====== */
+var storageOK=true, corruptNote='', rollNote='', S, P, tab='hoy', lastToday=today();
+var fil={type:'',sid:'',when:'up'}, cal={mode:'week',cur:today()}, openS={}, pendingImport=null;
+
+function defaults(){
+  var t=today(), now=new Date().toISOString();
+  var ov={};['2026-12-08','2026-12-25','2027-01-01','2027-01-06','2027-03-26'].forEach(function(d){ov[d]='libre';});
+  return {v:SCHEMA,created:now,updated:now,lastExport:null,
+    settings:{minutes:{libre:120,tarde:60,manana:45,noche:30,saliente:0,vacaciones:180},
+      diff:{ligero:20,normal:40,denso:60},review:15,gaps:[3,4,18],margin:3,lightDays:3,lightPct:40,end:'22:00',
+      weekdayMin:{0:null,1:null,2:null,3:null,4:null,5:null,6:null},
+      start:{manana:'17:00',tarde:'10:00',noche:'17:00',saliente:'11:00',libre:'10:00',vacaciones:'10:00'}},
+    cycle:{start:mondayOf(t),pattern:['manana','manana','manana','manana','manana','libre','libre']},
+    overrides:ov,dayMin:{},
+    subjects:SUBJ.map(function(n,i){return {id:'s'+(i+1),name:n,units:[]};}),
+    events:[],agenda:[],statuses:{},snap:null,seed:0,seed2:0};
+}
+function isObj(x){return x&&typeof x==='object'&&!Array.isArray(x);}
+function merge(d,r){var o={};Object.keys(d).forEach(function(k){
+  if(isObj(d[k]))o[k]=merge(d[k],isObj(r&&r[k])?r[k]:{});
+  else o[k]=(r&&r[k]!==undefined&&typeof r[k]===typeof d[k]&&(!Array.isArray(d[k])||Array.isArray(r[k])))?r[k]:d[k];});return o;}
+function isDate(s){return typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s);}
+function normalize(r){
+  var d=defaults();if(!isObj(r))return d;
+  var o={v:SCHEMA,created:typeof r.created==='string'?r.created:d.created,updated:typeof r.updated==='string'?r.updated:d.updated,
+    lastExport:typeof r.lastExport==='string'?r.lastExport:null};
+  o.settings=merge(d.settings,isObj(r.settings)?r.settings:{});
+  var wmIn=isObj(r.settings)&&isObj(r.settings.weekdayMin)?r.settings.weekdayMin:{},wm={};
+  for(var wk=0;wk<7;wk++){var wv=wmIn[wk];wm[wk]=(typeof wv==='number'&&wv>=0)?wv:null;}
+  o.settings.weekdayMin=wm;
+  if(!/^\d{2}:\d{2}$/.test(o.settings.end))o.settings.end='22:00';
+  o.agenda=(Array.isArray(r.agenda)?r.agenda:[]).filter(function(e){return isObj(e)&&isDate(e.date);}).map(function(e){
+    var all=!!e.allDay;
+    return {id:String(e.id||uid()),gid:String(e.gid||''),src:e.src==='ics'?'ics':'manual',title:String(e.title||'Evento'),cat:CAT[e.cat]?e.cat:'otro',date:e.date,allDay:all,
+      start:all||!/^\d{2}:\d{2}$/.test(e.start)?'':e.start,end:all||!/^\d{2}:\d{2}$/.test(e.end)?'':e.end,
+      study:(!all&&typeof e.study==='number'&&e.study>0)?Math.round(e.study):0,studyAll:!all&&!!e.studyAll,studyFrom:(!all&&/^\d{2}:\d{2}$/.test(e.studyFrom))?e.studyFrom:'',studyTo:(!all&&/^\d{2}:\d{2}$/.test(e.studyTo))?e.studyTo:'',
+      studyPrio:!all&&!!e.studyPrio&&(e.study>0||!!e.studyAll||!!e.studyFrom)};});
+  o.cycle=(isObj(r.cycle)&&Array.isArray(r.cycle.pattern)&&r.cycle.pattern.length&&isDate(r.cycle.start))?
+    {start:r.cycle.start,pattern:r.cycle.pattern.map(function(x){return TY[x]?x:'libre';})}:d.cycle;
+  o.overrides={};if(isObj(r.overrides))Object.keys(r.overrides).forEach(function(k){if(isDate(k)&&TY[r.overrides[k]])o.overrides[k]=r.overrides[k];});
+  if(!isObj(r.overrides))o.overrides=d.overrides;
+  o.dayMin={};if(isObj(r.dayMin))Object.keys(r.dayMin).forEach(function(k){if(isDate(k)&&typeof r.dayMin[k]==='number')o.dayMin[k]=Math.max(0,r.dayMin[k]);});
+  function fixTopic(t){
+    t=isObj(t)?t:{};var rv=Array.isArray(t.revs)?t.revs:[];
+    return {id:String(t.id||uid()),name:String(t.name||'Tema'),diff:DF[t.diff]?t.diff:'normal',
+      studied:isDate(t.studied)?t.studied:null,revs:[0,1,2].map(function(k){return isDate(rv[k])?rv[k]:null;}),
+      remain:typeof t.remain==='number'?t.remain:0,lastTouch:isDate(t.lastTouch)?t.lastTouch:null};
+  }
+  function fixUnit(x){
+    x=isObj(x)?x:{};
+    return {id:String(x.id||uid()),name:String(x.name||'Unidad'),topics:(Array.isArray(x.topics)?x.topics:[]).map(fixTopic)};
+  }
+  function fixSubject(s,i){
+    s=isObj(s)?s:{};
+    return {id:String(s.id||'s'+(i+1)),name:String(s.name||SUBJ[i]||'Asignatura'),units:(Array.isArray(s.units)?s.units:[]).map(fixUnit),from:isDate(s.from)?s.from:'',to:isDate(s.to)?s.to:''};
+  }
+  o.subjects=(Array.isArray(r.subjects)&&r.subjects.length)?r.subjects.map(fixSubject):d.subjects;
+  o.events=(Array.isArray(r.events)?r.events:[]).filter(function(e){return e&&isDate(e.date)&&EV[e.type];}).map(function(e){
+    return {id:String(e.id||uid()),date:e.date,subjectId:String(e.subjectId||''),type:e.type,title:String(e.title||''),minutes:typeof e.minutes==='number'?Math.max(0,e.minutes):0,
+      start:/^\d{2}:\d{2}$/.test(e.start)?e.start:'',end:/^\d{2}:\d{2}$/.test(e.end)?e.end:''};});
+  o.statuses={};if(isObj(r.statuses))Object.keys(r.statuses).forEach(function(k){var e=r.statuses[k];
+    if(isObj(e)&&isDate(e.date)&&['done','half','missed'].indexOf(e.s)>=0)o.statuses[k]={key:k,date:e.date,kind:String(e.kind),tid:String(e.tid),sid:String(e.sid),k:+e.k||0,min:+e.min||0,spent:+e.spent||0,real:Math.max(0,+e.real||0),s:e.s,title:String(e.title||''),sub:String(e.sub||'')};});
+  var tm=r.timer;
+  o.timer=(isObj(tm)&&typeof tm.key==='string'&&tm.key&&isDate(tm.date))?{key:tm.key,date:tm.date,startedAt:+tm.startedAt||0,accMs:Math.max(0,+tm.accMs||0),running:!!tm.running&&+tm.startedAt>0}:null;
+  o.seed=r.seed?1:0;o.seed2=r.seed2?1:0;
+  o.snap=isObj(r.snap)&&isDate(r.snap.date)?{date:r.snap.date,pending:+r.snap.pending||0,mins:+r.snap.mins||0}:null;
+  return o;
+}
+function migrate(d,ver){
+  if(!isObj(d))return d;var v=typeof ver==='number'?ver:(typeof d.v==='number'?d.v:0);
+  while(v<SCHEMA){if(MIGRATIONS[v])d=MIGRATIONS[v](d)||d;v++;}
+  d.v=SCHEMA;return d;
+}
+
+/* ====== Guardado local (todo en try/catch) ====== */
+function testStorage(){try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}}
+function load(){
+  storageOK=testStorage();
+  var txt=null;
+  try{txt=localStorage.getItem(KEY);}catch(e){storageOK=false;}
+  if(txt){
+    try{var o=JSON.parse(txt);return normalize(migrate(isObj(o)&&o.data?o.data:o,isObj(o)&&typeof o.version==='number'?o.version:undefined));}
+    catch(e){corruptNote='Los datos guardados estaban dañados y se ha empezado de cero. Se intentó conservar una copia en bruto.';
+      try{localStorage.setItem(KEY+'.dañado',txt);}catch(e2){}}
+  }
+  return defaults();
+}
+function persist(){
+  try{localStorage.setItem(KEY,JSON.stringify({version:SCHEMA,data:S}));storageOK=true;}catch(e){storageOK=false;}
+}
+
+/* ====== Turnos y tiempo ====== */
+function dayType(s){
+  if(S.overrides[s])return S.overrides[s];
+  var c=S.cycle,n=c.pattern.length;if(!n)return 'libre';
+  return c.pattern[((diffD(c.start,s)%n)+n)%n]||'libre';
+}
+/* Prioridad del tiempo de estudio: fecha concreta > día de la semana > tipo de turno.
+   Salvo la fecha concreta, se recorta al tiempo realmente libre (agenda). */
+var AG={};
+function reindex(){AG={};S.agenda.forEach(function(e){(AG[e.date]=AG[e.date]||[]).push(e);});}
+function toMin(s){var a=String(s||'').split(':');return (+a[0]||0)*60+(+a[1]||0);}
+function hhmm(m){m=Math.max(0,Math.min(1439,Math.round(m)));return p2(Math.floor(m/60))+':'+p2(m%60);}
+function evsOn(d){return (AG[d]||[]).slice().sort(function(a,b){return (a.allDay?-1:toMin(a.start))-(b.allDay?-1:toMin(b.start));});}
+function dayBase(s,ig){
+  if(!ig&&S.dayMin[s]!=null)return S.dayMin[s];
+  var w=S.settings.weekdayMin[pd(s).getDay()],m=(typeof w==='number')?w:(S.settings.minutes[dayType(s)]||0);
+  S.events.forEach(function(e){if(e.date===s&&e.type==='seminario'&&e.minutes&&!e.start)m-=e.minutes;});
+  return Math.max(0,m);
+}
+function gapsOf(d){
+  var ty=dayType(d),ws=toMin(S.settings.start[ty]||'10:00'),we=toMin(S.settings.end||'22:00');
+  if(we<=ws)return [];
+  var busy=evsOn(d).filter(function(e){return !e.allDay&&e.start;}).map(function(e){var a=toMin(e.start);return [a,Math.max(a+5,e.end?toMin(e.end):a+60)];});
+  S.events.forEach(function(e){if(e.date===d&&e.type==='seminario'&&e.start){var a=toMin(e.start);busy.push([a,Math.max(a+5,e.end?toMin(e.end):a+(e.minutes||60))]);}});
+  busy.sort(function(a,b){return a[0]-b[0];});
+  var gaps=[],cur=ws;
+  busy.forEach(function(b){if(b[0]>cur)gaps.push([cur,Math.min(b[0],we)]);cur=Math.max(cur,b[1]);});
+  if(cur<we)gaps.push([cur,we]);
+  return gaps.filter(function(g){return g[1]>g[0];});
+}
+function hasStudy(e){return !e.allDay&&!!e.start&&(e.study>0||!!e.studyAll||!!(e.studyFrom&&e.studyTo));}
+function evGaps(d){
+  var res=[];
+  evsOn(d).forEach(function(e){
+    if(!hasStudy(e))return;
+    var a=toMin(e.start),b=Math.max(a+5,e.end?toMin(e.end):a+60),w0=a,w1=b;
+    if(e.studyFrom&&e.studyTo){w0=Math.max(a,toMin(e.studyFrom));w1=Math.min(b,toMin(e.studyTo));if(w1-w0<10)return;}
+    var dur=w1-w0,al=(e.studyAll||!(e.study>0))?dur:Math.min(e.study,dur);
+    if(al>=10)res.push([w0,w0+al]);
+  });
+  return res;
+}
+function evPrio(d){return evsOn(d).some(function(e){return hasStudy(e)&&e.studyPrio;})&&evGaps(d).length>0;}
+function evPlanned(e){
+  var a=toMin(e.start),b=Math.max(a+5,e.end?toMin(e.end):a+60),n=0,lay=layoutDay(e.date,(P&&P.plan[e.date])||[]);
+  Object.keys(lay).forEach(function(k){var g=lay[k];if(g[0]>=a&&g[1]<=b)n+=g[1]-g[0];});
+  return n;
+}
+function evStudy(d){return evGaps(d).reduce(function(a,g){return a+g[1]-g[0];},0);}
+function freeMin(d){return gapsOf(d).reduce(function(a,g){return a+g[1]-g[0];},0);}
+function capOf(s,ig){
+  var b=dayBase(s,ig);if((!ig&&S.dayMin[s]!=null)||b===0)return b;
+  return evPrio(s)&&!ig?Math.min(b,evStudy(s)):Math.min(b,freeMin(s)+evStudy(s));
+}
+function layoutDay(d,tasks){
+  var gaps=evGaps(d).concat(evPrio(d)?[]:gapsOf(d)).map(function(g){return g.slice();}),res={};
+  tasks.forEach(function(x){for(var i=0;i<gaps.length;i++){if(gaps[i][1]-gaps[i][0]>=x.min){res[x.key]=[gaps[i][0],gaps[i][0]+x.min];gaps[i][0]+=x.min;return;}}});
+  return res;
+}
+function findTopic(id){for(var i=0;i<S.subjects.length;i++){var s=S.subjects[i];for(var j=0;j<s.units.length;j++){var u=s.units[j];for(var k=0;k<u.topics.length;k++)if(u.topics[k].id===id)return {t:u.topics[k],u:u,s:s};}}return null;}
+function subj(id){for(var i=0;i<S.subjects.length;i++)if(S.subjects[i].id===id)return S.subjects[i];return null;}
+function sColor(id){var i=0;for(var k=0;k<S.subjects.length;k++)if(S.subjects[k].id===id)i=k;return 'hsl('+((i*47+210)%360)+' 62% 48%)';}
+function spentOn(d){var a=0;Object.keys(S.statuses).forEach(function(k){if(S.statuses[k].date===d)a+=S.statuses[k].spent||0;});return a;}
+
+/* ====== Planificador ====== */
+function buildPlan(){
+  var t=today(),st=S.settings,gaps=st.gaps;
+  var last=t;S.events.forEach(function(e){if(e.date>last)last=e.date;});
+  var n=Math.min(420,Math.max(120,diffD(t,last)+2)),days=[],i;
+  for(i=0;i<n;i++)days.push(addD(t,i));
+  var skip={};Object.keys(S.statuses).forEach(function(k){var e=S.statuses[k];if(e.date===t)skip[e.kind+'|'+e.tid+'|'+e.k]=1;});
+  var cap=days.map(function(d,i){return Math.max(0,capOf(d)-(i===0?spentOn(t):0));});
+  var pre=[0];cap.forEach(function(c,i){pre.push(pre[i]+c);});
+  var lightSet={};S.events.forEach(function(e){if(e.type==='entrega')for(var j=0;j<=st.lightDays;j++)lightSet[addD(e.date,-j)]=1;});
+  var queue={},rem={},revItems=[],pool=[];
+  S.subjects.forEach(function(sub){queue[sub.id]=[];rem[sub.id]=0;
+    sub.units.forEach(function(u){u.topics.forEach(function(tp){
+      if(tp.studied){
+        pool.push({tid:tp.id,sid:sub.id,last:tp.lastTouch||tp.studied});
+        var k=-1;for(var q=0;q<3;q++)if(!tp.revs[q]){k=q;break;}
+        if(k>=0)revItems.push({tid:tp.id,sid:sub.id,k:k,due:addD(k===0?tp.studied:tp.revs[k-1],gaps[k])});
+      }else{
+        var need=tp.remain>0?tp.remain:st.diff[tp.diff];
+        queue[sub.id].push({tid:tp.id,sid:sub.id,need:need,diff:tp.diff});rem[sub.id]+=need;
+      }});});});
+  var lim={},dl={};
+  S.subjects.forEach(function(sub){
+    var ev=S.events.filter(function(e){return e.subjectId===sub.id&&e.date>=t&&(e.type==='examen'||e.type==='entrega');}).sort(byDate);
+    var pick=null;ev.forEach(function(e){if(!pick&&e.type==='examen')pick=e;});if(!pick)pick=ev[ev.length-1];
+    if(pick){dl[sub.id]=pick;lim[sub.id]=Math.max(0,diffD(t,pick.date)-st.margin);}
+  });
+  var out={},pl={},lastDay={};
+  function fits(x,L){return L>=MINSLOT[x.diff]&&L>=x.need*0.75;}
+  function score(sid,i,tc){
+    var L=lim[sid],r;
+    if(L==null)r=0.12;else if(L<=i)r=2+rem[sid]/600;else r=rem[sid]/Math.max(1,(pre[L]-pre[i])*0.5);
+    r-=(tc||0)*0.45;var ld=lastDay[sid];
+    if(ld===i-1)r-=0.3;else if(ld===i-2)r-=0.12;else if(ld===undefined||ld<i-3)r+=0.15;
+    return r;
+  }
+  for(i=0;i<n;i++){
+    var d=days[i],left=cap[i],tasks=[],sk=i===0?skip:{},light=!!lightSet[d];
+    var add=function(kind,tid,sid,k,min){tasks.push({key:d+'|'+kind+'|'+tid+'|'+k,date:d,kind:kind,tid:tid,sid:sid,k:k,min:min});left-=min;};
+    if(left>=10){
+      var budget=Math.max(st.review,Math.floor(left*0.5));
+      var due=revItems.filter(function(r){return !r.p&&r.due<=d&&!sk['review|'+r.tid+'|'+r.k];}).sort(function(a,b){return a.due<b.due?-1:a.due>b.due?1:0;});
+      var nw=[];
+      for(var a=0;a<due.length;a++){var r=due[a],m=Math.min(st.review,left,budget);if(m<10)break;
+        r.p=true;add('review',r.tid,r.sid,r.k,m);budget-=m;
+        if(r.k<2)nw.push({tid:r.tid,sid:r.sid,k:r.k+1,due:addD(d,gaps[r.k+1])});}
+      revItems=revItems.concat(nw);
+    }
+    var newLeft=light?Math.floor(left*st.lightPct/100):left,used={};
+    while(newLeft>=10){
+      var best=null;
+      for(var b=0;b<S.subjects.length;b++){var sid=S.subjects[b].id,q=queue[sid];if(!q.length)continue;
+        if((S.subjects[b].from&&d<S.subjects[b].from)||(S.subjects[b].to&&d>S.subjects[b].to))continue;
+        var j=-1;for(var c=0;c<q.length;c++)if(fits(q[c],newLeft)&&!sk['new|'+q[c].tid+'|0']){j=c;break;}
+        if(j<0)continue;var sc=score(sid,i,used[sid]);
+        if(!best||sc>best.sc)best={sid:sid,j:j,sc:sc};}
+      if(!best)break;
+      var x=queue[best.sid].splice(best.j,1)[0];rem[best.sid]-=x.need;
+      var mm=Math.max(10,Math.floor(Math.min(x.need,newLeft)/5)*5);
+      add('new',x.tid,x.sid,0,mm);newLeft-=mm;used[x.sid]=(used[x.sid]||0)+1;lastDay[x.sid]=i;pl[x.tid]=i;
+      revItems.push({tid:x.tid,sid:x.sid,k:0,due:addD(d,gaps[0])});pool.push({tid:x.tid,sid:x.sid,last:d});
+    }
+    if(left>=10&&!light&&i<14&&pool.length){
+      var cands=pool.filter(function(p){return !(i===0&&sk['test|'+p.tid+'|0']);}).sort(function(a,b){return a.last<b.last?-1:a.last>b.last?1:0;});
+      if(cands.length){add('test',cands[0].tid,cands[0].sid,0,Math.max(10,Math.floor(Math.min(20,left)/5)*5));cands[0].last=d;}
+    }
+    if(tasks.length){var ord={'new':0,review:1,test:2};tasks.sort(function(a,b){return ord[a.kind]-ord[b.kind];});out[d]=tasks;}
+  }
+  var risk=[];
+  S.subjects.forEach(function(sub){
+    var ev=dl[sub.id];if(!ev)return;
+    var L=lim[sub.id],dIdx=diffD(t,ev.date),hard=0,soft=0;
+    sub.units.forEach(function(u){u.topics.forEach(function(tp){
+      if(tp.studied)return;var need=tp.remain>0?tp.remain:st.diff[tp.diff],ix=pl[tp.id];
+      if(ix==null||ix>=dIdx)hard+=need;else if(ix>=L)soft+=need;});});
+    if(hard>0||soft>0)risk.push({sid:sub.id,ev:ev,hard:hard,soft:soft,perDay:Math.ceil(hard/Math.max(1,dIdx))});
+  });
+  return {plan:out,risk:risk,dl:dl};
+}
+function commit(){
+  S.updated=new Date().toISOString();replan();persist();render();schedSync();
+}
+function replan(){
+  reindex();P=buildPlan();var t=today(),p=P.plan[t]||[];
+  S.snap={date:t,pending:p.length,mins:p.reduce(function(a,x){return a+x.min;},0)};
+}
+
+
+/* ====== Sincronización con Google Drive (opcional; la app funciona igual sin ella) ====== */
+var SYNCKEY='planEstudioSync',SYNCNAME='plan-estudio-datos.json',sync={clientId:'',fileId:'',last:'',lastAt:'',token:'',exp:0,busy:false},syncT=null,syncMsg='';
+function loadSync(){try{var o=JSON.parse(localStorage.getItem(SYNCKEY)||'{}');if(isObj(o)){sync.clientId=String(o.clientId||'');sync.fileId=String(o.fileId||'');sync.last=String(o.last||'');sync.lastAt=String(o.lastAt||'');}}catch(e){}}
+function saveSync(){try{localStorage.setItem(SYNCKEY,JSON.stringify({clientId:sync.clientId,fileId:sync.fileId,last:sync.last,lastAt:sync.lastAt}));}catch(e){}}
+function tokenOK(){return !!sync.token&&Date.now()<sync.exp-60000;}
+function injectGIS(cb,quiet){
+  if(window.google&&window.google.accounts&&window.google.accounts.oauth2){if(cb)cb();return;}
+  var sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;
+  sc.onload=function(){if(cb)cb();};sc.onerror=function(){if(!quiet)toast('No se pudo cargar el inicio de sesión de Google (¿sin conexión?).');};
+  document.head.appendChild(sc);
+}
+function getToken(then){
+  if(tokenOK()){then(sync.token);return;}
+  if(!sync.clientId){toast('Primero escribe el ID de cliente de Google.');return;}
+  function ask(){
+    try{
+      var tc=google.accounts.oauth2.initTokenClient({client_id:sync.clientId,scope:'https://www.googleapis.com/auth/drive.file',
+        callback:function(r){if(!r||r.error){toast('Google no concedió el permiso.');return;}
+          sync.token=r.access_token;sync.exp=Date.now()+(+r.expires_in||3600)*1000;then(sync.token);},
+        error_callback:function(){toast('No se completó el inicio de sesión.');}});
+      tc.requestAccessToken({prompt:sync.fileId?'':'consent'});
+    }catch(e){toast('No se pudo iniciar sesión con Google.');}
+  }
+  injectGIS(ask);
+}
+function dFetch(url,opt){
+  opt=opt||{};opt.headers=Object.assign({Authorization:'Bearer '+sync.token},opt.headers||{});
+  return fetch(url,opt).then(function(r){
+    if(r.status===401){sync.token='';sync.exp=0;throw new Error('Sesión de Google caducada. Pulsa «Sincronizar» otra vez.');}
+    if(!r.ok)throw new Error('Drive respondió '+r.status);return r;});
+}
+function syncPayload(){var cp=JSON.parse(JSON.stringify(S));cp.timer=null;return JSON.stringify({app:APP,version:SCHEMA,exportedAt:new Date().toISOString(),data:cp});}
+function dFind(){
+  return dFetch('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id,name)&q='+encodeURIComponent("name='"+SYNCNAME+"' and trashed=false")).then(function(r){return r.json();}).then(function(j){return (j.files&&j.files[0])||null;});
+}
+function dUpload(id){
+  var body=syncPayload();
+  if(id)return dFetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body:body}).then(function(){return id;});
+  var b='planb'+Date.now(),meta=JSON.stringify({name:SYNCNAME,mimeType:'application/json'});
+  var mp='--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+body+'\r\n--'+b+'--';
+  return dFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body:mp}).then(function(r){return r.json();}).then(function(j){return j.id;});
+}
+function syncDone(msg){sync.last=S.updated;sync.lastAt=new Date().toISOString();saveSync();syncMsg=msg;sync.busy=false;render();}
+function applyRemote(rem){
+  var nd=normalize(migrate(rem.data,rem.version));nd.timer=S.timer;S=nd;replan();persist();
+}
+function syncNow(silent){
+  if(sync.busy)return;
+  getToken(function(){
+    sync.busy=true;if(!silent)toast('Sincronizando…');
+    dFind().then(function(f){
+      if(!f){return dUpload(null).then(function(id){sync.fileId=id;syncDone('Subido a Drive por primera vez.');});}
+      sync.fileId=f.id;
+      return dFetch('https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media').then(function(r){return r.json();}).then(function(rem){
+        if(!isObj(rem)||rem.app!==APP||!isObj(rem.data)||typeof rem.version!=='number'||rem.version>SCHEMA)
+          throw new Error('El archivo de Drive no es válido o es de una versión más nueva de la app.');
+        var ru=String((rem.data&&rem.data.updated)||''),lu=S.updated,last=sync.last;
+        if(ru===lu){syncDone('Todo está al día.');return;}
+        var lc=!last||lu>last,rc=!last||ru>last;
+        if(rc&&!lc){applyRemote(rem);syncDone('Descargados los cambios de Drive.');return;}
+        if(lc&&!rc){return dUpload(f.id).then(function(){syncDone('Cambios subidos a Drive.');});}
+        sync.busy=false;pendingRemote=rem;
+        openModal('<h3>Hay cambios en los dos sitios</h3><p>Drive: <b>'+fmtIso(ru)+'</b><br>Este dispositivo: <b>'+fmtIso(lu)+'</b></p><p>Elige cuál conservar. El otro se sustituirá.</p>'+
+          '<div class="mb"><button class="btn" data-act="syncKeepDrive">Usar lo de Drive</button><button class="btn pri" data-act="syncKeepLocal">Usar lo de este dispositivo</button></div>');
+      });
+    }).catch(function(e){sync.busy=false;syncMsg='';toast(String(e&&e.message||'No se pudo sincronizar.'));render();});
+  });
+}
+var pendingRemote=null;
+function schedSync(){
+  if(!sync.fileId||!tokenOK()||sync.busy)return;
+  clearTimeout(syncT);syncT=setTimeout(function(){syncNow(true);},3000);
+}
+function syncCard(){
+  var conn=!!sync.fileId;
+  return '<div class="card"><b>☁️ Sincronizar con Google Drive</b><div class="mu" style="margin:4px 0 8px">Para usar el mismo plan en móvil y tablet. Abre siempre la app desde la misma dirección (por ejemplo GitHub Pages) y pon el mismo ID de cliente en cada dispositivo.</div>'+
+    '<label>ID de cliente de Google<input id="sy_id" value="'+esc(sync.clientId)+'" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off"></label>'+
+    '<div class="row" style="margin-top:8px"><button class="btn" data-act="syncSaveId">Guardar ID</button><button class="btn pri" data-act="syncNow">'+(conn?'Sincronizar ahora':'Conectar y sincronizar')+'</button>'+(conn?'<button class="btn danger" data-act="syncOff">Desconectar</button>':'')+'</div>'+
+    '<div class="mu" style="margin-top:8px">'+(conn?'Conectado ✓ · última sincronización: <b>'+(sync.lastAt?fmtIso(sync.lastAt):'—')+'</b>':'Sin conectar')+(syncMsg?'<br>'+esc(syncMsg):'')+'</div></div>';
+}
+
+/* ====== Marcar tareas ====== */
+function topicTitle(tid){var f=findTopic(tid);return f?f.t.name:'(tema eliminado)';}
+function applyStatus(e){
+  var f=findTopic(e.tid);if(!f)return;var tp=f.t;
+  if(e.s==='done'||e.s==='half')tp.lastTouch=e.date;
+  if(e.kind==='new'){
+    if(e.s==='done'){tp.studied=e.date;tp.remain=0;tp.revs=[null,null,null];}
+    else if(e.s==='half')tp.remain=Math.max(10,Math.ceil(e.min/2/5)*5);
+  }else if(e.kind==='review'&&e.s==='done')tp.revs[e.k]=e.date;
+}
+function revertStatus(e){
+  var f=findTopic(e.tid);if(!f)return;var tp=f.t;
+  if(e.kind==='new'){if(e.s==='done'&&tp.studied===e.date){tp.studied=null;tp.revs=[null,null,null];}if(e.s==='half')tp.remain=0;}
+  else if(e.kind==='review'&&e.s==='done'&&tp.revs[e.k]===e.date)tp.revs[e.k]=null;
+}
+function setStatus(key,s){
+  var t=today(),cur=S.statuses[key],base=null;
+  (P.plan[t]||[]).forEach(function(x){if(x.key===key)base=x;});if(!base)base=cur;if(!base)return;
+  if(cur&&cur.s===s){revertStatus(cur);delete S.statuses[key];}
+  else{
+    if(cur)revertStatus(cur);
+    var f=findTopic(base.tid),sb=subj(base.sid);
+    var e={key:key,date:base.date,kind:base.kind,tid:base.tid,sid:base.sid,k:base.k,min:base.min,s:s,
+      spent:s==='done'?base.min:s==='half'?Math.round(base.min/2):0,title:f?f.t.name:'',sub:sb?sb.name:''};
+    S.statuses[key]=e;applyStatus(e);
+  }
+  commit();
+}
+
+/* ====== Avisos ====== */
+function warnings(){
+  var t=today(),out=[];
+  S.events.filter(function(e){return (e.type==='entrega'||e.type==='examen')&&e.date>=t&&diffD(t,e.date)<=28;}).sort(byDate).forEach(function(e){
+    var streak=0,mx=0,tot=0,capSum=0,days=0;
+    for(var i=7;i>=1;i--){var d=addD(e.date,-i);if(d<t){streak=0;continue;}
+      days++;capSum+=capOf(d);
+      if(dayType(d)==='noche'){streak++;tot++;if(streak>mx)mx=streak;}else streak=0;}
+    var nm=EV[e.type].n.toLowerCase()+' «'+(e.title||'sin título')+'» ('+shortDate(e.date)+')';
+    if(mx>=3)out.push('Antes de la '+nm+' tienes '+mx+' noches seguidas. Conviene adelantar trabajo ahora.');
+    else if(tot>=3)out.push('Antes de la '+nm+' tienes '+tot+' noches en la última semana. Intenta adelantar trabajo.');
+    if(days>=3&&capSum<150)out.push('La semana previa a la '+nm+' solo da ≈'+fmtMin(capSum)+' de estudio. Adelanta lo que puedas.');
+  });
+  return out;
+}
+
+/* ====== Vistas ====== */
+function chip(ty,full){var x=TY[ty]||TY.libre;return '<span class="chip"><i style="background:'+x.c+'"></i>'+(full?x.n:x.l)+'</span>';}
+function evLabel(e){var s=subj(e.subjectId);return (e.title||EV[e.type].n)+(s?' · '+s.name:'');}
+function countTopics(sub){var tot=0,st=0,rv=0;sub.units.forEach(function(u){u.topics.forEach(function(t){tot++;if(t.studied){st++;rv+=t.revs.filter(Boolean).length;}});});return {tot:tot,st:st,rv:rv};}
+function kindLabel(x){return x.kind==='new'?'Nuevo':x.kind==='review'?'Repaso '+(x.k+1)+'/3':'Test';}
+
+function banner(){
+  var h='';
+  if(!storageOK)h+='<div class="banner bad">⚠️ Este navegador NO permite guardar datos (modo privado, vista previa de archivos o almacenamiento bloqueado). Lo que hagas se perderá al cerrar. Abre el archivo en el navegador normal o usa «Exportar copia» antes de salir.</div>';
+  if(corruptNote)h+='<div class="banner warn">'+esc(corruptNote)+'</div>';
+  return h;
+}
+function agRow(e){
+  var c=CAT[e.cat]||CAT.otro,tm=e.allDay?'Todo el día':e.start+(e.end?'–'+e.end:'');
+  return '<div class="card ag" data-act="editAg" data-id="'+e.id+'"><div class="tm">'+tm+'</div><div class="grow"><b>'+c.i+' '+esc(e.title)+'</b>'+(e.src==='ics'?' <span class="mu">Google</span>':'')+(hasStudy(e)?' <span class="mu">📖 estudio '+((e.studyFrom&&e.studyTo)?e.studyFrom+'–'+e.studyTo+' ':'')+(e.studyAll||!(e.study>0)?(e.studyFrom&&e.studyTo?'':'todo el evento'):'hasta '+e.study+' min')+(e.studyPrio?' (prioritario)':'')+' · planificado '+evPlanned(e)+' min</span>':'')+'</div><span class="mu">✎</span></div>';
+}
+/* ====== Cronómetro ====== */
+function tmMs(){var T=S.timer;if(!T)return 0;return T.accMs+(T.running?Math.max(0,Date.now()-T.startedAt):0);}
+function fmtT(ms){var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60;return (h?h+':'+p2(m):m)+':'+p2(c);}
+function timerBar(x){
+  if(x.date!==today())return '';
+  var T=S.timer,k=esc(x.key);
+  if(T&&T.key===x.key){
+    var over=tmMs()>x.min*60000;
+    return '<div class="tmr"><b class="tk'+(over?' over':'')+'" data-tick="1" data-max="'+x.min+'">⏱ '+fmtT(tmMs())+'</b>'+
+      (T.running?'<button class="btn sm" data-act="tmPause">⏸ Pausar</button>':'<button class="btn sm pri" data-act="tmResume">▶ Seguir</button>')+
+      '<button class="btn sm" data-act="tmStop">■ Terminar</button></div>';
+  }
+  return '<div class="tmr"><button class="btn sm" data-act="tmStart" data-key="'+k+'">▶ Empezar</button></div>';
+}
+function tmStart(key){
+  if(S.timer){toast('Ya hay una tarea en marcha. Termínala o descártala primero.');return;}
+  S.timer={key:key,date:today(),startedAt:Date.now(),accMs:0,running:true};commit();
+}
+function tmPause(){var T=S.timer;if(!T||!T.running)return;T.accMs+=Math.max(0,Date.now()-T.startedAt);T.running=false;T.startedAt=0;commit();}
+function tmResume(){var T=S.timer;if(!T||T.running)return;T.startedAt=Date.now();T.running=true;commit();}
+function tmTask(key){var b=null;(P.plan[today()]||[]).forEach(function(x){if(x.key===key)b=x;});if(!b&&S.statuses[key])b=S.statuses[key];return b;}
+function tmStop(){
+  var T=S.timer;if(!T)return;
+  var b=tmTask(T.key);if(!b){toast('Esa tarea ya no está en el plan de hoy. Descarta el cronómetro.');return;}
+  if(T.running){T.accMs+=Math.max(0,Date.now()-T.startedAt);T.running=false;T.startedAt=0;persist();}
+  var mins=Math.max(1,Math.round(T.accMs/60000)),sug=mins>=b.min*0.8?'done':'half';
+  var f=findTopic(b.tid);
+  openModal('<h3>Terminar tarea</h3><div><b>'+esc(f?f.t.name:(b.title||'Tarea'))+'</b></div><div class="mu">Previsto '+b.min+' min · cronómetro '+fmtT(T.accMs)+'</div>'+
+    (T.accMs>6*3600000?'<div class="banner warn" style="margin-top:8px">Más de 6 h en marcha: ¿olvidaste pararlo? Corrige los minutos reales.</div>':'')+
+    '<label>Minutos estudiados de verdad<input id="tm_min" type="number" min="1" step="1" inputmode="numeric" value="'+mins+'"></label>'+
+    '<div class="mu" style="margin-top:6px">Sugerencia: '+(sug==='done'?'«Hecha» (llegaste a lo previsto)':'«A medias» (menos de lo previsto)')+'.</div>'+
+    '<div class="tb" style="margin-top:10px"><button class="'+(sug==='done'?'on done':'')+'" data-act="tmFin" data-s="done">✓ Hecha</button><button class="'+(sug==='half'?'on half':'')+'" data-act="tmFin" data-s="half">◐ A medias</button><button data-act="tmFin" data-s="missed">✕ No hecha</button></div>'+
+    '<div class="mb"><button class="btn danger" data-act="tmDrop">Descartar tiempo</button><button class="btn" data-act="tmResume2">Seguir cronometrando</button></div>');
+}
+function tmFin(st){
+  var T=S.timer;if(!T)return;var key=T.key,mins=Math.max(0,Math.round(+val('tm_min')||0));
+  var b=tmTask(key);if(!b){S.timer=null;closeModal();commit();return;}
+  var cur=S.statuses[key];
+  if(!cur||cur.s!==st)setStatus(key,st);
+  var e=S.statuses[key];
+  if(e){e.real=mins;e.spent=st==='missed'?0:Math.max(1,mins);}
+  S.timer=null;closeModal();commit();
+}
+function tmTick(){
+  if(!S.timer||!S.timer.running)return;
+  var ms=tmMs();
+  Array.prototype.forEach.call(document.querySelectorAll('[data-tick]'),function(el){
+    el.textContent='⏱ '+fmtT(ms);
+    el.className='tk'+(ms>(+el.dataset.max||0)*60000?' over':'');});
+}
+setInterval(tmTick,1000);
+/* ====== Tiempo habitual por tema ====== */
+function habitual(){
+  var by={ligero:[],normal:[],denso:[]};
+  Object.keys(S.statuses).forEach(function(k){var e=S.statuses[k];
+    if(e.kind!=='new'||e.s!=='done'||!(e.real>0))return;
+    var f=findTopic(e.tid);if(!f||!by[f.t.diff])return;by[f.t.diff].push(e.real);});
+  var res=[];
+  ['ligero','normal','denso'].forEach(function(k){
+    var a=by[k].slice().sort(function(x,y){return x-y;});if(a.length<3)return;
+    var m=a.length%2?a[(a.length-1)/2]:(a[a.length/2-1]+a[a.length/2])/2;
+    var v=Math.max(5,Math.round(m/5)*5),cfg=S.settings.diff[k];
+    res.push({k:k,n:a.length,med:Math.round(m),sug:v,cfg:cfg,diff:Math.abs(v-cfg)>=5&&Math.abs(v-cfg)>=cfg*0.15});
+  });
+  return res;
+}
+function taskCard(x,st,tm){
+  var f=findTopic(x.tid),sb=subj(x.sid);
+  var name=f?f.t.name:(x.title||'(tema eliminado)'),sub=sb?sb.name:(x.sub||''),un=f?f.u.name:'';
+  var s=st?st.s:'';
+  function b(k,ic,lb){return '<button class="'+(s===k?'on '+k:'')+'" data-act="st" data-key="'+esc(x.key)+'" data-s="'+k+'">'+ic+' '+lb+'</button>';}
+  return '<div class="task '+(s==='done'?'done':'')+'" style="--sc:'+sColor(x.sid)+'"><div class="tt"><div class="grow"><b>'+esc(name)+'</b><div class="mu">'+esc(sub)+(un?' · '+esc(un):'')+'</div></div>'+
+    '<div class="tr"><span class="pill '+x.kind+'">'+kindLabel(x)+'</span><br><b>'+x.min+' min</b>'+(tm?'<div class="mu">'+hhmm(tm[0])+'–'+hhmm(tm[1])+'</div>':'')+((st&&st.real>0)?'<div class="mu">⏱ '+st.real+' min reales</div>':'')+'</div></div>'+
+    (st?'':timerBar(x))+'<div class="tb">'+b('done','✓','Hecha')+b('half','◐','A medias')+b('missed','✕','No hecha')+'</div></div>';
+}
+function vHoy(){
+  var t=today(),ty=dayType(t),cap=capOf(t),pend=P.plan[t]||[],h='';
+  var dn=Object.keys(S.statuses).map(function(k){return S.statuses[k];}).filter(function(e){return e.date===t;});
+  var spent=dn.reduce(function(a,e){return a+e.spent;},0),plan=pend.reduce(function(a,x){return a+x.min;},0);
+  var hasTopics=S.subjects.some(function(s){return countTopics(s).tot>0;});
+  if(rollNote)h+='<div class="banner inf">'+esc(rollNote)+' <button class="btn sm" data-act="dismissRoll">Entendido</button></div>';
+  if(S.timer&&(S.timer.date!==t||tmMs()>4*3600000||!tmTask(S.timer.key)))
+    h+='<div class="banner warn">⏱ Hay un cronómetro de la tarea del '+shortDate(S.timer.date)+' que lleva '+fmtT(tmMs())+'. ¿Se te olvidó pararlo?<br><button class="btn sm pri" data-act="tmStop">Terminar y corregir</button> <button class="btn sm" data-act="tmDrop">Descartar</button></div>';
+  if(habitual().some(function(x){return x.diff;}))h+='<div class="banner inf">💡 Con tus tiempos reales, hay sugerencias para ajustar la duración de los temas. <button class="btn sm" data-act="tab" data-t="mas">Ver en Más</button></div>';
+  if(sync.clientId&&!tokenOK()&&!sync.busy)h+='<div class="banner inf">☁️ Sincroniza con Drive para tener aquí lo último de tus otros dispositivos. <button class="btn sm pri" data-act="syncNow">Sincronizar</button></div>';
+  var due=backupDue();
+  if(due)h+='<div class="banner warn">💾 '+esc(due)+'<br><button class="btn sm pri" data-act="expJSON">Exportar copia ahora</button></div>';
+  h+='<div class="hero"><div class="hd">'+longDate(t)+'</div><div class="hr">'+chip(ty,true)+'<span>Tiempo para estudiar: <b>'+fmtMin(cap)+'</b></span></div><div class="mu">Hecho '+fmtMin(spent)+' · Pendiente '+fmtMin(plan)+'</div><div class="row" style="margin-top:8px"><button class="btn sm" data-act="rpOpen">🔄 Replanificar…</button></div></div>';
+  P.risk.forEach(function(r){
+    var days=diffD(t,r.ev.date),sb=subj(r.sid);
+    var msg=r.hard>0?'No caben ≈'+fmtMin(r.hard)+' de temario antes de esta fecha. Necesitarías ≈'+r.perDay+' min más al día hasta entonces.':'Caben, pero sin margen: ≈'+fmtMin(r.soft)+' quedan para los últimos días.';
+    h+='<div class="alert '+(r.hard>0?'bad':'')+'">⚠️ <b>'+esc(sb?sb.name:'')+'</b> — '+esc(EV[r.ev.type].n.toLowerCase())+' '+rel(days)+' ('+shortDate(r.ev.date)+'). '+msg+'</div>';});
+  warnings().forEach(function(w){h+='<div class="alert">🌙 '+esc(w)+'</div>';});
+  var lay=layoutDay(t,pend),evT=agendaRows(t);
+  if(evT.length){h+='<h2>Agenda de hoy</h2>';evT.forEach(function(r){h+=r.h;});}
+  var tom=addD(t,1),evM=agendaRows(tom);
+  if(evM.length){h+='<h2>Mañana</h2>';evM.forEach(function(r){h+=r.h;});}
+  h+='<h2>Qué estudiar hoy</h2>';
+  if(!pend.length&&!dn.length){
+    h+='<div class="card empty">'+(!hasTopics?'Aún no hay temas. Ve a <b>Temario</b> y añade las unidades y temas de tus asignaturas.':cap===0?'Hoy no hay hueco de estudio. Descansa. 😴':'Nada pendiente para hoy. ¡Al día!')+'</div>';
+  }else{
+    pend.forEach(function(x){h+=taskCard(x,null,lay[x.key]);});
+    if(dn.length){h+='<h2>Marcadas hoy</h2>';dn.forEach(function(e){h+=taskCard(e,e);});}
+  }
+  var ev=S.events.filter(function(e){return e.date>=t;}).sort(byDate).slice(0,4);
+  h+='<h2>Próximas fechas</h2>';
+  if(!ev.length)h+='<div class="card empty">Sin fechas. Añade entregas, exámenes y seminarios en la pestaña <b>Fechas</b>.</div>';
+  ev.forEach(function(e){var n=diffD(t,e.date);
+    h+='<div class="card cd"><div class="n" style="color:'+(n<=3?'var(--bad)':'inherit')+'">'+n+'<small>'+(n===1?'día':'días')+'</small></div><div class="grow"><span class="evt" style="--ec:'+EV[e.type].c+'">'+EV[e.type].n+'</span> <b>'+esc(evLabel(e))+'</b><div class="mu">'+longDate(e.date)+(e.start?' · '+timeOf(e):'')+'</div></div></div>';});
+  h+='<div class="mu" style="margin:14px 2px">Última copia exportada: <b>'+(S.lastExport?fmtIso(S.lastExport):'nunca')+'</b></div>';
+  return h;
+}
+function backupDue(){
+  var hasData=S.subjects.some(function(s){return countTopics(s).tot>0;})||S.events.length>0;
+  if(!hasData)return '';
+  var ref=S.lastExport||S.created,days=Math.floor((Date.now()-new Date(ref).getTime())/DAY);
+  if(!S.lastExport&&days>=7)return 'Todavía no has exportado ninguna copia de seguridad. Haz una para no perder tu plan.';
+  if(S.lastExport&&days>7)return 'Hace '+days+' días de tu última copia de seguridad. Conviene exportar otra.';
+  return '';
+}
+function dayInfo(d){
+  var t=today(),sts=Object.keys(S.statuses).map(function(k){return S.statuses[k];}).filter(function(e){return e.date===d;}),load=0,tasks=[];
+  if(d<t)load=sts.reduce(function(a,e){return a+e.spent;},0);
+  else{tasks=P.plan[d]||[];load=tasks.reduce(function(a,x){return a+x.min;},0)+(d===t?sts.reduce(function(a,e){return a+e.spent;},0):0);}
+  return {load:load,cap:capOf(d),tasks:tasks,sts:sts};
+}
+function abbr(name){
+  var w=String(name||'').replace(/[:,]/g,' ').split(/\s+/).filter(Boolean),rom='';
+  if(w.length&&/^(I|II|III|IV|V)$/.test(w[w.length-1]))rom=' '+w.pop();
+  var ini=w.filter(function(x){return x.length>3;}).map(function(x){return x.charAt(0).toUpperCase();}).join('');
+  return (ini||String(name||'').slice(0,3).toUpperCase())+rom;
+}
+function trunc(s,n){s=String(s||'');return s.length>n?s.slice(0,n-1)+'…':s;}
+function timeOf(e){return e.start?e.start+(e.end?'–'+e.end:''):'';}
+/* Todo lo que ocurre un día (fechas del máster + agenda), ordenado por hora */
+function dayItems(d){
+  var out=[];
+  S.events.forEach(function(e){
+    if(e.date!==d)return;var sb=subj(e.subjectId),ab=sb?abbr(sb.name):'';
+    out.push({s:e.start?toMin(e.start):-1,c:EV[e.type].c,t:EV[e.type].n,time:timeOf(e),ab:ab,title:e.title||EV[e.type].n,
+      short:e.type==='seminario'?ab+(e.start?' '+e.start:''):(e.type==='examen'?'Examen ':'Entrega ')+ab});
+  });
+  evsOn(d).forEach(function(e){
+    var c=CAT[e.cat]||CAT.otro,tm=e.allDay?'':timeOf(e);
+    out.push({s:e.allDay||!e.start?-1:toMin(e.start),c:'#64748b',t:c.n,time:tm,ab:'',title:e.title,short:c.i+(e.start&&!e.allDay?' '+e.start:'')+' '+e.title});
+  });
+  out.sort(function(a,b){return a.s-b.s;});
+  return out;
+}
+/* Semana: una línea por evento, con tipo, hora, asignatura y título */
+function evChips(d){
+  var it=dayItems(d),h=it.slice(0,5).map(function(x){
+    return '<div class="evl"><span class="evt" style="--ec:'+x.c+'">'+esc(x.t)+(x.time?' '+x.time:'')+'</span> '+(x.ab?'<b>'+esc(x.ab)+'</b> · ':'')+esc(trunc(x.title,34))+'</div>';}).join('');
+  return h+(it.length>5?'<div class="mu">+'+(it.length-5)+' más</div>':'');
+}
+function evCard(e){
+  var sb=subj(e.subjectId);
+  return '<div class="card ag" data-act="editEv" data-id="'+e.id+'" style="border-left:6px solid '+EV[e.type].c+'"><div class="tm">'+(timeOf(e)||'Todo el día')+'</div><div class="grow"><span class="evt" style="--ec:'+EV[e.type].c+'">'+EV[e.type].n+'</span> <b>'+esc(e.title||EV[e.type].n)+'</b><div class="mu">'+esc(sb?sb.name:'')+'</div></div><span class="mu">✎</span></div>';
+}
+function agendaRows(d){
+  var rows=[];
+  S.events.forEach(function(e){if(e.date===d)rows.push({s:e.start?toMin(e.start):-1,h:evCard(e)});});
+  evsOn(d).forEach(function(e){rows.push({s:e.allDay||!e.start?-1:toMin(e.start),h:agRow(e)});});
+  rows.sort(function(a,b){return a.s-b.s;});
+  return rows;
+}
+function vDay(){
+  var d=cal.cur,t=today(),ty=dayType(d),inf=dayInfo(d),h='';
+  h+='<div class="row sp" style="margin-bottom:8px"><button class="btn sm" data-act="calNav" data-n="-1">◀</button><b style="text-transform:capitalize">'+longDate(d)+'</b><button class="btn sm" data-act="calNav" data-n="1">▶</button></div>';
+  h+='<div class="card"><div class="row sp">'+chip(ty,true)+(S.overrides[d]?'<span class="mu">(cambio)</span>':'')+'<span>Estudio: <b>'+fmtMin(inf.load)+'</b> de '+fmtMin(inf.cap)+'</span><button class="btn sm" data-act="day" data-d="'+d+'">Editar día</button></div></div>';
+  var rows=agendaRows(d);
+  if(d>=t){
+    var tasks=P.plan[d]||[],lay=layoutDay(d,tasks);
+    tasks.forEach(function(x){rows.push({s:lay[x.key]?lay[x.key][0]:5000,h:d===t?taskCard(x,null,lay[x.key]):staticTask(x,lay[x.key])});});
+  }
+  rows.sort(function(a,b){return a.s-b.s;});
+  if(!rows.length&&!inf.sts.length)h+='<div class="card empty">Nada en la agenda ni de estudio este día.</div>';
+  rows.forEach(function(r){h+=r.h;});
+  if(inf.sts.length){h+='<h2>'+(d<t?'Registro':'Marcadas hoy')+'</h2>';
+    inf.sts.forEach(function(e){h+=d===t?taskCard(e,e):'<div class="mu">'+(e.s==='done'?'✓':e.s==='half'?'◐':'✕')+' '+esc(e.title||topicTitle(e.tid))+' · '+esc(e.sub)+' · '+e.min+' min</div>';});}
+  return h;
+}
+function staticTask(x,tm){
+  var sb=subj(x.sid);
+  return '<div class="task" style="--sc:'+sColor(x.sid)+'"><div class="tt"><div class="grow"><b>'+esc(topicTitle(x.tid))+'</b><div class="mu">'+esc(sb?sb.name:'')+'</div></div><div class="tr"><span class="pill '+x.kind+'">'+kindLabel(x)+'</span><br><b>'+x.min+' min</b>'+(tm?'<div class="mu">'+hhmm(tm[0])+'–'+hhmm(tm[1])+'</div>':'')+'</div></div></div>';
+}
+function vCal(){
+  var t=today(),h='<div class="row sp" style="margin-bottom:10px"><div class="seg"><button class="'+(cal.mode==='day'?'on':'')+'" data-act="calMode" data-m="day">Día</button><button class="'+(cal.mode==='week'?'on':'')+'" data-act="calMode" data-m="week">Semana</button><button class="'+(cal.mode==='month'?'on':'')+'" data-act="calMode" data-m="month">Mes</button></div><button class="btn sm" data-act="calToday">Hoy</button></div>'+
+    '<div class="row" style="margin-bottom:10px"><button class="btn sm pri" data-act="addAg" data-d="'+(cal.mode==='day'?cal.cur:'')+'">＋ Evento</button><button class="btn sm" data-act="icsOpen">Importar .ics de Google</button></div>';
+  var title,i;
+  if(cal.mode==='day'){h+=vDay();}
+  else if(cal.mode==='week'){
+    var m=mondayOf(cal.cur),e=addD(m,6);
+    title=pd(m).getDate()+' '+MS[pd(m).getMonth()]+' – '+pd(e).getDate()+' '+MS[pd(e).getMonth()]+' '+pd(e).getFullYear();
+    h+='<div class="row sp" style="margin-bottom:8px"><button class="btn sm" data-act="calNav" data-n="-1">◀</button><b>'+title+'</b><button class="btn sm" data-act="calNav" data-n="1">▶</button></div>';
+    var tl=0,tc=0;
+    for(i=0;i<7;i++){var d=addD(m,i),inf=dayInfo(d),ty=dayType(d);tl+=inf.load;tc+=inf.cap;
+      var pct=inf.cap?Math.min(100,Math.round(inf.load*100/inf.cap)):0;
+      h+='<button class="wrow '+(d===t?'today':'')+'" data-act="day" data-d="'+d+'"><div class="wd"><b>'+DS[pd(d).getDay()]+'</b><span>'+pd(d).getDate()+'</span></div><div class="grow">'+chip(ty,true)+(S.overrides[d]?' <span class="mu">(cambio)</span>':'')+'<div>'+evChips(d)+'</div><div class="bar"><i style="width:'+pct+'%"></i></div></div><div class="wl"><b>'+inf.load+'′</b><br>de '+inf.cap+'′</div></button>';}
+    h+='<div class="mu" style="margin:6px 2px">Semana: '+fmtMin(tl)+' de estudio planificados de '+fmtMin(tc)+' disponibles.</div>';
+  }else{
+    var c=pd(cal.cur),first=new Date(c.getFullYear(),c.getMonth(),1),nd=new Date(c.getFullYear(),c.getMonth()+1,0).getDate(),off=(first.getDay()+6)%7;
+    title=MN[c.getMonth()]+' '+c.getFullYear();
+    h+='<div class="row sp" style="margin-bottom:8px"><button class="btn sm" data-act="calNav" data-n="-1">◀</button><b style="text-transform:capitalize">'+title+'</b><button class="btn sm" data-act="calNav" data-n="1">▶</button></div><div class="mgrid">';
+    ['L','M','X','J','V','S','D'].forEach(function(x){h+='<div class="mh">'+x+'</div>';});
+    for(i=0;i<off;i++)h+='<div></div>';
+    for(i=1;i<=nd;i++){var ds=c.getFullYear()+'-'+p2(c.getMonth()+1)+'-'+p2(i),inf2=dayInfo(ds),ty2=dayType(ds);
+      var its=dayItems(ds),lbl=its.slice(0,3).map(function(x){return '<div class="ml" style="--ec:'+x.c+'">'+esc(trunc(x.short,13))+'</div>';}).join('')+(its.length>3?'<div class="mu" style="font-size:.6rem">+'+(its.length-3)+'</div>':'');
+      h+='<button class="mc '+(ds===t?'today':'')+'" data-act="day" data-d="'+ds+'"><div class="tp" style="background:'+TY[ty2].c+'"></div><b>'+i+'</b><small>'+TY[ty2].l+(inf2.load?' · '+inf2.load+'′':'')+'</small>'+lbl+'</button>';}
+    h+='</div><div class="mu" style="margin-top:8px">Barra de color = turno (M T N S L V) y minutos de estudio. Etiquetas: seminarios (azul, asignatura y hora), entregas (rojo), exámenes (morado) y agenda personal (gris). Toca un día para ver el detalle.</div>';
+  }
+  var w=warnings();if(w.length){h+='<h2>Avisos de carga</h2>';w.forEach(function(x){h+='<div class="alert">🌙 '+esc(x)+'</div>';});}
+  return h;
+}
+function vTem(){
+  var h='<div class="mu" style="margin:2px">Toca una asignatura para ver y editar sus unidades y temas.</div><div style="height:8px"></div>';
+  S.subjects.forEach(function(sub){
+    var c=countTopics(sub),p1=c.tot?Math.round(c.st*100/c.tot):0,p2_=c.st?Math.round(c.rv*100/(c.st*3)):0,open=openS[sub.id];
+    h+='<div class="card" style="border-left:6px solid '+sColor(sub.id)+'"><div class="row sp" data-act="togS" data-id="'+sub.id+'" style="cursor:pointer"><b class="grow">'+esc(sub.name)+'</b><span>'+(open?'▲':'▼')+'</span></div>'+
+      '<div class="bar"><i style="width:'+p1+'%"></i></div><div class="mu">Estudiados '+c.st+' de '+c.tot+' ('+p1+'%)</div>'+((sub.from||sub.to)?'<div class="mu">📅 Temas nuevos '+(sub.from?'desde el '+longDate(sub.from):'')+(sub.to?' hasta el '+longDate(sub.to):'')+'</div>':'')+'<div class="bar b2"><i style="width:'+p2_+'%"></i></div><div class="mu">Repasos hechos '+c.rv+' de '+(c.st*3)+'</div>';
+    if(open){
+      var si=S.subjects.indexOf(sub);
+      h+='<div class="mu" style="margin-top:8px">📅 Periodo para estudiar temas nuevos (vacío = sin límite). Los repasos de lo ya estudiado siguen aunque la asignatura esté fuera del periodo.</div><div class="g2"><label>Desde<input type="date" data-path="subjects.'+si+'.from" data-type="dateopt" value="'+(sub.from||'')+'"></label><label>Hasta<input type="date" data-path="subjects.'+si+'.to" data-type="dateopt" value="'+(sub.to||'')+'"></label></div>';
+      h+='<div class="row" style="margin-top:8px"><button class="btn sm" data-act="renSub" data-id="'+sub.id+'">✎ Renombrar</button><button class="btn sm" data-act="addUnit" data-id="'+sub.id+'">＋ Unidad</button></div>';
+      if(!sub.units.length)h+='<div class="empty">Sin unidades todavía.</div>';
+      sub.units.forEach(function(u){
+        h+='<div class="uh"><b>'+esc(u.name)+'</b><button class="btn sm" data-act="addTopics" data-id="'+sub.id+'" data-u="'+u.id+'">＋ Temas</button><button class="btn sm" data-act="renUnit" data-id="'+sub.id+'" data-u="'+u.id+'">✎</button><button class="btn sm danger" data-act="delUnit" data-id="'+sub.id+'" data-u="'+u.id+'">🗑</button></div>';
+        u.topics.forEach(function(t){
+          h+='<div class="trow"><input type="checkbox" '+(t.studied?'checked':'')+' data-act="togTopic" data-id="'+t.id+'" style="width:22px;height:22px;margin:0"><div class="nm '+(t.studied?'dn':'')+'" data-act="editTopic" data-id="'+t.id+'">'+esc(t.name)+(t.remain>0&&!t.studied?' <span class="mu">(a medias)</span>':'')+'</div><button class="dchip '+t.diff+'" data-act="cycDiff" data-id="'+t.id+'">'+DF[t.diff]+'</button><button class="btn sm" data-act="editTopic" data-id="'+t.id+'">✎</button></div>';});
+      });
+    }
+    h+='</div>';
+  });
+  return h;
+}
+function vFec(){
+  var t=today(),all=S.events.slice().sort(byDate);
+  var h='<div class="row sp"><h2 style="margin:4px 2px">Entregas, exámenes y seminarios</h2><button class="btn pri" data-act="addEv">＋ Añadir</button></div>';
+  var tyO='<option value="">Todos los tipos</option>'+Object.keys(EV).map(function(k){return '<option value="'+k+'"'+(fil.type===k?' selected':'')+'>'+EV[k].n+'s</option>';}).join('');
+  var sbO='<option value="">Todas las asignaturas</option>'+S.subjects.map(function(x){return '<option value="'+esc(x.id)+'"'+(fil.sid===x.id?' selected':'')+'>'+esc(x.name)+'</option>';}).join('');
+  var wO=[['up','Próximas'],['30','Próximos 30 días'],['past','Pasadas'],['all','Todas']].map(function(w){return '<option value="'+w[0]+'"'+(fil.when===w[0]?' selected':'')+'>'+w[1]+'</option>';}).join('');
+  h+='<div class="card"><div class="g2"><label>Cuándo<select data-fil="when">'+wO+'</select></label><label>Tipo<select data-fil="type">'+tyO+'</select></label></div><label>Asignatura<select data-fil="sid">'+sbO+'</select></label></div>';
+  var list=all.filter(function(e){
+    if(fil.type&&e.type!==fil.type)return false;
+    if(fil.sid&&e.subjectId!==fil.sid)return false;
+    if(fil.when==='up')return e.date>=t;
+    if(fil.when==='30')return e.date>=t&&e.date<=addD(t,30);
+    if(fil.when==='past')return e.date<t;
+    return true;});
+  if(fil.when==='past')list.reverse();
+  var act=fil.type||fil.sid||fil.when!=='up';
+  if(act)h+='<div class="mu" style="margin:2px">'+list.length+' resultado'+(list.length===1?'':'s')+' <button class="btn sm" data-act="filReset">Quitar filtros</button></div>';
+  if(!list.length)h+='<div class="card empty">'+(act?'Nada con estos filtros.':'Sin fechas próximas.')+'</div>';
+  function card(e){var n=diffD(t,e.date);
+    return '<div class="card cd"><div class="n" style="color:'+(n>=0&&n<=3?'var(--bad)':'inherit')+'">'+(n>=0?n:'—')+'<small>'+(n===1?'día':n>=0?'días':'pasado')+'</small></div><div class="grow"><span class="evt" style="--ec:'+EV[e.type].c+'">'+EV[e.type].n+'</span> <b>'+esc(evLabel(e))+'</b><div class="mu">'+longDate(e.date)+(e.start?' · '+e.start+(e.end?'–'+e.end:''):(e.type==='seminario'&&e.minutes?' · '+e.minutes+' min':''))+'</div></div><button class="btn sm" data-act="editEv" data-id="'+e.id+'">✎</button></div>';}
+  list.forEach(function(e){h+=card(e);});
+  return h;
+}
+function vMas(){
+  var st=S.settings,h='',i;
+  h+=syncCard();
+  h+='<div class="card"><b>💾 Datos y copias</b><div class="mu" style="margin:4px 0 8px">'+(storageOK?'Guardado automático en este navegador: <b style="color:var(--ok)">activo ✓</b>':'<b style="color:var(--bad)">Guardado automático NO disponible</b>')+'<br>Última copia exportada: <b>'+(S.lastExport?fmtIso(S.lastExport):'nunca')+'</b><br>Versión de los datos: '+SCHEMA+'</div>'+
+    '<div class="row"><button class="btn pri" data-act="expJSON">Exportar copia (.json)</button><button class="btn" data-act="shareJSON">Enviar a Drive / compartir</button><button class="btn" data-act="impOpen">Importar copia</button></div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn" data-act="expICS">Exportar calendario (.ics)</button><button class="btn" data-act="txtOpen">Ver copia como texto</button></div>'+
+    '<div style="margin-top:12px"><button class="btn danger" data-act="wipe">Borrar todos los datos</button></div></div>';
+  var hb=habitual();
+  h+='<div class="card"><b>⏱ Tu tiempo habitual por tema</b><div class="mu" style="margin:4px 0 8px">Calculado con la mediana de los temas nuevos que marcaste «Hecha» con el cronómetro (hacen falta 3 como mínimo por nivel).</div>';
+  if(!hb.length)h+='<div class="mu">Todavía no hay datos suficientes. Usa el cronómetro en varios temas.</div>';
+  hb.forEach(function(x){h+='<div class="row sp" style="margin:6px 0"><div class="grow"><b>'+DF[x.k]+'</b><div class="mu">Configurado '+x.cfg+' min · tu mediana '+x.med+' min ('+x.n+' temas)</div></div>'+(x.diff?'<button class="btn sm pri" data-act="applyHab" data-k="'+x.k+'" data-v="'+x.sug+'">Usar '+x.sug+' min</button>':'<span class="mu">✓ ya cuadra</span>')+'</div>';});
+  h+='</div>';
+  h+='<div class="card"><b>🔁 Ciclo de turnos</b><div class="mu">Toca cada día para cambiar su turno. Se repite automáticamente. Para un día suelto, cámbialo desde el calendario.</div><div class="cyc">';
+  S.cycle.pattern.forEach(function(ty,i){h+='<button class="cc" style="background:'+TY[ty].c+'" data-act="cyc" data-i="'+i+'">'+TY[ty].l+'<small>'+(i+1)+'</small></button>';});
+  h+='</div><div class="row"><button class="btn sm" data-act="cycAdd">＋ Día</button><button class="btn sm" data-act="cycDel">− Día</button><button class="btn sm" data-act="cycPreset">Lun–Vie mañana, fin de semana libre</button></div>'+
+    '<label>O escríbelo con letras (M T N S L V, separadas por espacios)</label><div class="row"><input id="cycTxt" class="grow" placeholder="M M T T N N S L L" style="width:auto"><button class="btn" data-act="cycApply">Aplicar</button></div>'+
+    '<label>El día 1 del ciclo cae el</label><input type="date" data-path="cycle.start" data-type="date" value="'+S.cycle.start+'">'+
+    '<div class="mu" style="margin-top:6px">Hoy es el día '+(((diffD(S.cycle.start,today())%S.cycle.pattern.length)+S.cycle.pattern.length)%S.cycle.pattern.length+1)+' del ciclo. M mañana · T tarde · N noche · S saliente · L libre · V vacaciones.</div></div>';
+  h+='<div class="card"><b>⏱ Tiempo de estudio por tipo de día (min)</b><div class="g2">';
+  TYK.forEach(function(k){h+='<label>'+TY[k].n+'<input type="number" min="0" step="5" inputmode="numeric" data-path="settings.minutes.'+k+'" data-type="num" value="'+st.minutes[k]+'"></label>';});
+  h+='</div></div><div class="card"><b>📆 Tiempo por día de la semana y por fechas</b><div class="mu" style="margin:4px 0">Prioridad: fecha concreta → día de la semana → tipo de turno. Vacío = según el turno. El tiempo se recorta si tu agenda deja menos hueco libre.</div><div class="g2">';
+  [1,2,3,4,5,6,0].forEach(function(k){var w=st.weekdayMin[k];h+='<label>'+DN[k].charAt(0).toUpperCase()+DN[k].slice(1)+' (min)<input type="number" min="0" step="5" inputmode="numeric" placeholder="según turno" data-path="settings.weekdayMin.'+k+'" data-type="numopt" value="'+(w==null?'':w)+'"></label>';});
+  h+='<label>Hora límite de estudio<input type="time" data-path="settings.end" data-type="time" value="'+st.end+'"></label></div>'+
+    '<div class="row" style="margin-top:10px"><button class="btn" data-act="openRange" data-d="">Aplicar a un rango de días…</button><button class="btn sm danger" data-act="clearDayMin">Quitar tiempos por fecha</button></div>'+
+    '<div class="mu" style="margin-top:6px">Tiempos por fecha ahora: '+Object.keys(S.dayMin).length+'.</div></div>'+
+    '<div class="card"><b>🗒 Agenda (gym, comidas, Google Calendar)</b><div class="mu" style="margin:4px 0 8px">Eventos propios: '+S.agenda.filter(function(e){return e.src!=='ics';}).length+' · importados de Google: '+S.agenda.filter(function(e){return e.src==='ics';}).length+'. El estudio se coloca en los huecos libres entre ellos.</div>'+
+    '<div class="row"><button class="btn pri" data-act="addAg" data-d="">＋ Evento</button><button class="btn" data-act="icsOpen">Importar .ics de Google</button><button class="btn sm danger" data-act="icsClear">Borrar importados</button></div></div>'+
+    '<div class="card"><b>📚 Tiempo por tema (min)</b><div class="g2">';
+  DFK.forEach(function(k){h+='<label>'+DF[k]+'<input type="number" min="5" step="5" inputmode="numeric" data-path="settings.diff.'+k+'" data-type="num" value="'+st.diff[k]+'"></label>';});
+  h+='<label>Repaso<input type="number" min="10" step="5" inputmode="numeric" data-path="settings.review" data-type="num" value="'+st.review+'"></label></div></div>';
+  h+='<div class="card"><b>🧭 Planificación</b><div class="g2"><label>Margen antes del examen/entrega (días)<input type="number" min="0" inputmode="numeric" data-path="settings.margin" data-type="num" value="'+st.margin+'"></label>'+
+    '<label>Días aligerados antes de una entrega<input type="number" min="0" inputmode="numeric" data-path="settings.lightDays" data-type="num" value="'+st.lightDays+'"></label>'+
+    '<label>% de temario nuevo esos días<input type="number" min="0" max="100" inputmode="numeric" data-path="settings.lightPct" data-type="num" data-max="100" value="'+st.lightPct+'"></label></div>'+
+    '<div class="mu" style="margin-top:8px">Repasos a los 3 días, a los 7 y a los 25 días del estudio. Temas densos solo en huecos de 50 min o más.</div></div>';
+  h+='<div class="card"><b>🗓 Hora de inicio del bloque (para el .ics)</b><div class="g2">';
+  TYK.forEach(function(k){h+='<label>'+TY[k].n+'<input type="time" data-path="settings.start.'+k+'" data-type="time" value="'+st.start[k]+'"></label>';});
+  h+='</div></div>';
+  return h;
+}
+
+function renderNav(){
+  var items=[['hoy','📋','Hoy'],['cal','📅','Plan'],['tem','📚','Temario'],['fec','⏰','Fechas'],['mas','⚙️','Más']];
+  document.getElementById('nav').innerHTML=items.map(function(x){return '<button class="'+(tab===x[0]?'on':'')+'" data-act="tab" data-t="'+x[0]+'"><b>'+x[1]+'</b>'+x[2]+'</button>';}).join('');
+}
+function render(){
+  var y=window.scrollY,h;
+  try{h=banner()+({hoy:vHoy,cal:vCal,tem:vTem,fec:vFec,mas:vMas}[tab])();}
+  catch(e){h=banner()+'<div class="banner bad">Error al mostrar esta pantalla: '+esc(e&&e.message)+'. Tus datos no se han tocado; exporta una copia desde «Más».</div>';}
+  document.getElementById('app').innerHTML=h;renderNav();window.scrollTo(0,y);
+}
+
+/* ====== Modales y avisos ====== */
+var $m=document.getElementById('modal'),toastT;
+function openModal(h){$m.innerHTML='<div class="sheet">'+h+'</div>';$m.classList.add('open');}
+function closeModal(){$m.classList.remove('open');$m.innerHTML='';}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(function(){t.style.display='none';},3500);}
+function val(id){var e=document.getElementById(id);return e?e.value:'';}
+function opts(map,sel){return Object.keys(map).map(function(k){var v=typeof map[k]==='string'?map[k]:map[k].n;return '<option value="'+k+'"'+(k===sel?' selected':'')+'>'+esc(v)+'</option>';}).join('');}
+function confirmBox(msg,act,id,label){openModal('<h3>¿Seguro?</h3><p>'+msg+'</p><div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn danger" data-act="'+act+'" data-id="'+esc(id||'')+'">'+(label||'Sí, continuar')+'</button></div>');}
+function openDay(d){
+  var inf=dayInfo(d),ty=dayType(d),h='<h3 style="text-transform:capitalize">'+longDate(d)+'</h3><div class="mu">Turno</div><div class="row" style="margin:6px 0">';
+  TYK.forEach(function(k){h+='<button class="btn sm" style="'+(k===ty?'background:'+TY[k].c+';color:#111;font-weight:700;border-color:'+TY[k].c:'')+'" data-act="setTurn" data-d="'+d+'" data-ty="'+k+'">'+TY[k].n+'</button>';});
+  h+='</div>'+(S.overrides[d]?'<button class="btn sm" data-act="resetTurn" data-d="'+d+'">Volver al turno del ciclo</button>':'')+
+    '<label>Minutos de estudio este día (vacío = automático: '+fmtMin(capOf(d,true))+')</label><div class="row"><input id="dm" type="number" min="0" step="5" inputmode="numeric" class="grow" style="width:auto" value="'+(S.dayMin[d]!=null?S.dayMin[d]:'')+'"><button class="btn" data-act="saveDayMin" data-d="'+d+'">Guardar</button></div>'+
+    '<div class="row" style="margin-top:8px"><button class="btn sm" data-act="dayOff" data-d="'+d+'">Sin estudio este día</button><button class="btn sm" data-act="openRange" data-d="'+d+'">Tiempo para varios días…</button></div>';
+  var ag=evsOn(d);
+  if(ag.length){h+='<h2>Agenda</h2>';ag.forEach(function(e){h+=agRow(e);});}
+  var ev=S.events.filter(function(e){return e.date===d;});
+  if(ev.length){h+='<h2>Fechas</h2>';ev.forEach(function(e){h+='<div class="row"><span class="evt" style="--ec:'+EV[e.type].c+'">'+EV[e.type].n+'</span><span class="grow">'+esc(evLabel(e))+(e.start?' · '+timeOf(e):'')+'</span><button class="btn sm" data-act="editEv" data-id="'+e.id+'">✎</button></div>';});}
+  if(d<today()){h+='<h2>Registro</h2>';if(!inf.sts.length)h+='<div class="mu">Sin tareas registradas.</div>';
+    inf.sts.forEach(function(e){h+='<div class="mu">'+(e.s==='done'?'✓':e.s==='half'?'◐':'✕')+' '+esc(e.title||topicTitle(e.tid))+' · '+esc(e.sub)+' · '+e.min+' min</div>';});}
+  else{h+='<h2>Planificado</h2>';if(!inf.tasks.length)h+='<div class="mu">Nada planificado.</div>';
+    inf.tasks.forEach(function(x){var sb=subj(x.sid);h+='<div class="mu"><b style="color:var(--tx)">'+esc(topicTitle(x.tid))+'</b> · '+esc(sb?sb.name:'')+' · '+kindLabel(x)+' · '+x.min+' min</div>';});}
+  h+='<div class="mb"><button class="btn" data-act="viewDay" data-d="'+d+'">Ver día</button><button class="btn" data-act="addAg" data-d="'+d+'">＋ Evento</button><button class="btn" data-act="addEv" data-d="'+d+'">＋ Fecha</button><button class="btn pri" data-act="closeM">Cerrar</button></div>';
+  openModal(h);
+}
+function openEvent(id,date){
+  var e=null;S.events.forEach(function(x){if(x.id===id)e=x;});
+  var sj={};S.subjects.forEach(function(s){sj[s.id]=s.name;});
+  openModal('<h3>'+(e?'Editar fecha':'Nueva fecha')+'</h3><label>Tipo<select id="f_t">'+opts(EV,e?e.type:'entrega')+'</select></label><label>Asignatura<select id="f_s">'+opts(sj,e?e.subjectId:S.subjects[0].id)+'</select></label>'+
+    '<label>Fecha<input id="f_d" type="date" value="'+(e?e.date:date||today())+'"></label><label>Título (opcional)<input id="f_n" value="'+esc(e?e.title:'')+'" placeholder="Ej.: Trabajo final, Examen parcial"></label>'+
+    '<div class="mu" style="margin-top:10px">Solo seminarios: con horas, ese rato queda ocupado y el estudio se coloca fuera. Sin horas, la duración se resta del tiempo de estudio del día.</div>'+
+    '<div class="g2"><label>Hora de inicio<input id="f_st" type="time" value="'+(e&&e.start?e.start:'')+'"></label><label>Hora de fin<input id="f_en" type="time" value="'+(e&&e.end?e.end:'')+'"></label></div>'+
+    '<label>Duración en minutos (si no pones horas)<input id="f_m" type="number" min="0" step="5" inputmode="numeric" value="'+(e&&e.minutes?e.minutes:'')+'"></label>'+
+    '<div class="mb">'+(e?'<button class="btn danger" data-act="delEv" data-id="'+e.id+'">Eliminar</button>':'')+'<button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="saveEv" data-id="'+(e?e.id:'')+'">Guardar</button></div>');
+}
+function openAg(id,date){
+  var e=null;S.agenda.forEach(function(x){if(x.id===id)e=x;});
+  var dd=e?e.date:(isDate(date)?date:today()),wd=pd(dd).getDay(),serie=e&&e.gid&&S.agenda.filter(function(x){return x.gid===e.gid;}).length>1;
+  var cats={};Object.keys(CAT).forEach(function(k){cats[k]=CAT[k].i+' '+CAT[k].n;});
+  var days=[1,2,3,4,5,6,0].map(function(k){return '<label class="chk"><input type="checkbox" class="agd" value="'+k+'" '+(k===wd?'checked':'')+'>'+DS[k]+'</label>';}).join('');
+  openModal('<h3>'+(e?'Editar evento':'Nuevo evento')+'</h3><label>Título<input id="ag_t" value="'+esc(e?e.title:'')+'" placeholder="Gym, comida con…, cena…"></label>'+
+    '<label>Categoría<select id="ag_c">'+opts(cats,e?e.cat:'gym')+'</select></label><label>Fecha<input id="ag_d" type="date" value="'+dd+'"></label>'+
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="ag_all" '+(e&&e.allDay?'checked':'')+'> Todo el día</label>'+
+    '<div class="g2"><label>Inicio<input id="ag_s" type="time" value="'+(e?e.start:'18:00')+'"></label><label>Fin<input id="ag_e" type="time" value="'+(e?e.end:'19:00')+'"></label></div>'+
+    '<div class="mu" style="margin-top:10px">📖 ¿Puedes estudiar durante el evento? (tren, esperas, descansos…). El estudio del día se coloca primero dentro del evento (sin aumentar el total) y el resto, fuera.</div>'+
+    '<div class="g2"><label>Estudiar desde<input id="ag_sf" type="time" value="'+(e&&e.studyFrom?e.studyFrom:'')+'"></label><label>hasta<input id="ag_sh" type="time" value="'+(e&&e.studyTo?e.studyTo:'')+'"></label></div><div class="mu">Opcional: franja del evento en la que puedes estudiar; la app decide dónde colocar el estudio dentro de ella.</div>'+
+    '<div class="g2"><label>Minutos de estudio posibles<input id="ag_st" type="number" min="0" step="5" inputmode="numeric" value="'+(e&&e.study?e.study:'')+'"></label><label class="chk" style="margin-top:28px"><input type="checkbox" id="ag_sa" '+(e&&e.studyAll?'checked':'')+'> Todo el evento</label></div>'+
+    '<label class="chk"><input type="checkbox" id="ag_sp" '+(e&&e.studyPrio?'checked':'')+'> Prioridad: hacer aquí todo el estudio del día (sin estudiar fuera)</label>'+
+    (e?(serie?'<label class="chk" style="margin-top:12px"><input type="checkbox" id="ag_ser"> Aplicar título, categoría y horas a toda la serie</label>':''):
+      '<label>Repetir<select id="ag_r"><option value="no">No se repite</option><option value="weekly">Cada semana</option></select></label><label>Días de la semana (si se repite)</label><div class="dgrid">'+days+'</div><label>Repetir hasta (vacío = 26 semanas)<input id="ag_u" type="date"></label>')+
+    '<div class="mb">'+(e?'<button class="btn danger" data-act="delAg" data-id="'+e.id+'">Eliminar</button>':'')+'<button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="saveAg" data-id="'+(e?e.id:'')+'">Guardar</button></div>');
+}
+function saveAg(id){
+  var cat=CAT[val('ag_c')]?val('ag_c'):'otro',dt=val('ag_d'),all=document.getElementById('ag_all').checked,st=val('ag_s'),en=val('ag_e');
+  if(!isDate(dt)){toast('Elige una fecha válida.');return;}
+  if(!all){if(!st){toast('Pon la hora de inicio.');return;}if(en&&toMin(en)<=toMin(st)){toast('La hora de fin debe ser posterior al inicio.');return;}}
+  var title=val('ag_t').trim()||CAT[cat].n;
+  var sa=!all&&document.getElementById('ag_sa').checked,sp=!all&&document.getElementById('ag_sp').checked,sf=all?'':val('ag_sf'),sh=all?'':val('ag_sh'),sm=all?0:Math.max(0,Math.round(+val('ag_st')||0));
+  if(sf&&sh&&toMin(sh)<=toMin(sf)){toast('La franja de estudio debe terminar después de empezar.');return;}
+  if(!(sf&&sh)){sf='';sh='';}
+  function mk(d,gid){return {id:uid(),gid:gid||'',src:'manual',title:title,cat:cat,date:d,allDay:all,start:all?'':st,end:all?'':en,study:sm,studyAll:sa,studyFrom:sf,studyTo:sh,studyPrio:sp};}
+  if(id){
+    var item=null;S.agenda.forEach(function(x){if(x.id===id)item=x;});if(!item)return;
+    var serEl=document.getElementById('ag_ser'),targets=(serEl&&serEl.checked&&item.gid)?S.agenda.filter(function(x){return x.gid===item.gid;}):[item];
+    targets.forEach(function(x){x.title=title;x.cat=cat;x.allDay=all;x.start=all?'':st;x.end=all?'':en;x.study=sm;x.studyAll=sa;x.studyFrom=sf;x.studyTo=sh;x.studyPrio=sp&&(sm>0||sa||!!sf);});
+    item.date=dt;
+  }else if(val('ag_r')==='weekly'){
+    var sel=[];Array.prototype.forEach.call(document.querySelectorAll('.agd'),function(c){if(c.checked)sel.push(+c.value);});
+    if(!sel.length)sel=[pd(dt).getDay()];
+    var until=val('ag_u');if(!isDate(until))until=addD(dt,26*7-1);if(until>addD(dt,730))until=addD(dt,730);
+    var gid=uid(),n=0;
+    for(var d=dt;d<=until&&n<400;d=addD(d,1)){if(sel.indexOf(pd(d).getDay())>=0){S.agenda.push(mk(d,gid));n++;}}
+    if(!n)S.agenda.push(mk(dt,''));
+  }else S.agenda.push(mk(dt,''));
+  closeModal();commit();
+}
+/* ===== Importar .ics ===== */
+function icsUnesc(s){return String(s||'').replace(/\\[nN]/g,' ').replace(/\\([,;\\])/g,'$1');}
+function icsDT(v,p){
+  v=String(v||'').trim();var m;
+  if((p&&p.VALUE==='DATE')||/^\d{8}$/.test(v)){m=v.match(/^(\d{4})(\d{2})(\d{2})/);return m?{d:m[1]+'-'+m[2]+'-'+m[3],m:null,all:true}:null;}
+  m=v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?(Z)?$/);if(!m)return null;
+  if(m[7]){var dt=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+(m[6]||0)));return {d:fd(dt),m:dt.getHours()*60+dt.getMinutes(),all:false};}
+  return {d:m[1]+'-'+m[2]+'-'+m[3],m:(+m[4])*60+(+m[5]),all:false};
+}
+function icsDur(v){var m=String(v||'').match(/^P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?)?$/);return m?((+m[1]||0)*10080+(+m[2]||0)*1440+(+m[3]||0)*60+(+m[4]||0)):null;}
+function expandRule(sd,rule,from,to,ex){
+  var r={};rule.split(';').forEach(function(x){var q=x.indexOf('=');if(q>0)r[x.slice(0,q).toUpperCase()]=x.slice(q+1);});
+  var f=r.FREQ,iv=Math.max(1,parseInt(r.INTERVAL,10)||1),cnt=r.COUNT?parseInt(r.COUNT,10):Infinity,until=to;
+  if(r.UNTIL){var u=icsDT(r.UNTIL,{});if(u&&u.d<until)until=u.d;}
+  var map={SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+  var by=r.BYDAY?r.BYDAY.split(',').map(function(x){return map[x.slice(-2)];}).filter(function(x){return x!=null;}):[];
+  var out=[],n=0,g=0,d,i;
+  function take(d){if(n>=cnt)return false;n++;if(d>=from&&d<=until&&ex.indexOf(d)<0)out.push(d);return true;}
+  if(f==='DAILY'){for(d=sd;d<=until&&g++<20000;d=addD(d,iv)){if(!take(d))break;}}
+  else if(f==='WEEKLY'){var base=mondayOf(sd),days=by.length?by:[pd(sd).getDay()];
+    for(d=sd;d<=until&&g++<20000;d=addD(d,1)){if(Math.floor(diffD(base,d)/7)%iv!==0)continue;if(days.indexOf(pd(d).getDay())<0)continue;if(!take(d))break;}}
+  else if(f==='MONTHLY'||f==='YEARLY'){var s=pd(sd);
+    for(i=0;g++<1500;i+=iv){var dt=f==='MONTHLY'?new Date(s.getFullYear(),s.getMonth()+i,s.getDate()):new Date(s.getFullYear()+i,s.getMonth(),s.getDate());
+      if(dt.getDate()!==s.getDate())continue;d=fd(dt);if(d>until)break;if(!take(d))break;}}
+  else if(sd>=from&&sd<=to&&ex.indexOf(sd)<0)out.push(sd);
+  return out;
+}
+function guessCat(t){return /gym|gimnasio|entreno|crossfit|pesas|padel|pádel|running|correr/i.test(t)?'gym':/cena|cenar/i.test(t)?'cena':/comida|almuerzo|comer|desayuno/i.test(t)?'comida':'otro';}
+function parseICS(txt){
+  var lines=String(txt).replace(/\r?\n[ \t]/g,'').split(/\r?\n/),evs=[],cur=null,alarm=0;
+  lines.forEach(function(ln){
+    ln=ln.replace(/\s+$/,'');
+    if(ln==='BEGIN:VEVENT'){cur={ex:[]};alarm=0;return;}
+    if(ln==='END:VEVENT'){if(cur)evs.push(cur);cur=null;return;}
+    if(!cur)return;
+    if(ln==='BEGIN:VALARM'){alarm++;return;}
+    if(ln==='END:VALARM'){alarm--;return;}
+    if(alarm>0)return;
+    var i=ln.indexOf(':');if(i<0)return;
+    var parts=ln.slice(0,i).split(';'),name=parts[0].toUpperCase(),v=ln.slice(i+1),p={};
+    parts.slice(1).forEach(function(x){var q=x.indexOf('=');if(q>0)p[x.slice(0,q).toUpperCase()]=x.slice(q+1);});
+    if(name==='EXDATE'){v.split(',').forEach(function(x){var r=icsDT(x,p);if(r)cur.ex.push(r.d);});}
+    else cur[name]={v:v,p:p};
+  });
+  var from=addD(today(),-7),to=addD(today(),400),items=[],gids={},over={},truncated=false;
+  evs.forEach(function(ev){if(ev['RECURRENCE-ID']&&ev.UID){var r=icsDT(ev['RECURRENCE-ID'].v,ev['RECURRENCE-ID'].p);if(r)over[ev.UID.v+'|'+r.d]=1;}});
+  evs.forEach(function(ev,ix){
+    if(!ev.DTSTART)return;var st=icsDT(ev.DTSTART.v,ev.DTSTART.p);if(!st)return;
+    if(ev.STATUS&&/CANCELLED/i.test(ev.STATUS.v))return;
+    var key=(ev.UID&&ev.UID.v)||('sin-uid-'+ix),en=ev.DTEND?icsDT(ev.DTEND.v,ev.DTEND.p):null,endMin=0,span=1;
+    if(!st.all){var dur=null;if(en&&!en.all)dur=en.d===st.d?en.m-st.m:1439-st.m;else if(ev.DURATION)dur=icsDur(ev.DURATION.v);
+      if(dur==null||dur<=0)dur=60;endMin=Math.min(1439,st.m+dur);}
+    else if(en&&en.d>st.d)span=Math.min(14,diffD(st.d,en.d));
+    var isRec=ev.RRULE&&!ev['RECURRENCE-ID'];
+    var dates=isRec?expandRule(st.d,ev.RRULE.v,from,to,ev.ex):[st.d];
+    var title=icsUnesc(ev.SUMMARY?ev.SUMMARY.v:'(sin título)').trim()||'(sin título)',cat=guessCat(title),gid='ics:'+key;
+    dates.forEach(function(d0){
+      if(isRec&&over[key+'|'+d0])return;
+      for(var k=0;k<span;k++){var dd=addD(d0,k);if(dd<from||dd>to)continue;
+        if(items.length>=3000){truncated=true;return;}
+        items.push({id:uid(),gid:gid,src:'ics',title:title,cat:cat,date:dd,allDay:!!st.all,start:st.all?'':hhmm(st.m),end:st.all?'':hhmm(endMin)});gids[gid]=1;}
+    });
+  });
+  return {items:items,gids:gids,total:evs.length,truncated:truncated};
+}
+function openICS(){
+  openModal('<h3>Importar calendario de Google (.ics)</h3><div class="mu">En Google Calendar (web): Ajustes → Importar y exportar → Exportar. Descomprime el ZIP y elige el .ics. Se importan los eventos desde hace una semana hasta dentro de ~13 meses, con sus repeticiones. Si vuelves a importar el mismo calendario, no se duplican.</div>'+
+    '<label>Archivo .ics</label><input type="file" id="icsFile" accept=".ics,text/calendar"><label>…o pega el contenido</label><textarea id="icsTxt" placeholder="BEGIN:VCALENDAR…"></textarea>'+
+    '<div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="icsPaste">Leer texto</button></div>');
+}
+var pendingICS=null;
+function icsPreview(txt){
+  var r;try{r=parseICS(txt);}catch(e){toast('No se pudo leer ese .ics.');return;}
+  if(!/BEGIN:VCALENDAR/.test(txt)||!r.total){toast('No parece un archivo .ics válido o no tiene eventos.');return;}
+  if(!r.items.length){toast('No hay eventos desde hace una semana en adelante.');return;}
+  pendingICS=r;
+  var replace=S.agenda.filter(function(e){return r.gids[e.gid];}).length;
+  openModal('<h3>Importar eventos</h3><p>Se han encontrado <b>'+r.items.length+'</b> eventos ('+r.total+' en el archivo, repeticiones incluidas).'+(r.truncated?' Solo se importan los primeros 3000.':'')+'</p>'+
+    (replace?'<p class="mu">Sustituirán a '+replace+' eventos importados antes del mismo calendario. Tus eventos creados a mano no se tocan.</p>':'')+
+    '<div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="icsGo">Importar</button></div>');
+}
+function openRange(d,to,m){
+  var days=[1,2,3,4,5,6,0].map(function(k){return '<label class="chk"><input type="checkbox" class="rgd" value="'+k+'" checked>'+DS[k]+'</label>';}).join('');
+  openModal('<h3>Tiempo de estudio para varios días</h3><div class="g2"><label>Desde<input id="rg_f" type="date" value="'+(d||today())+'"></label><label>Hasta<input id="rg_t" type="date" value="'+(to||d||today())+'"></label></div>'+
+    '<label>Minutos de estudio (0 = sin estudio; vacío = quitar el cambio y volver a lo automático)</label><input id="rg_m" type="number" min="0" step="5" inputmode="numeric" value="'+(m==null?'':m)+'"><label>Solo estos días de la semana</label><div class="dgrid">'+days+'</div>'+
+    '<div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="applyRange">Aplicar</button></div>');
+}
+function applyRange(){
+  var f=val('rg_f'),t=val('rg_t'),m=val('rg_m').trim();
+  if(!isDate(f)||!isDate(t)||t<f){toast('Revisa las fechas del rango.');return;}
+  if(diffD(f,t)>400){toast('El rango máximo es de 400 días.');return;}
+  var sel=[];Array.prototype.forEach.call(document.querySelectorAll('.rgd'),function(c){if(c.checked)sel.push(+c.value);});
+  var n=0;
+  for(var d=f;d<=t;d=addD(d,1)){if(sel.indexOf(pd(d).getDay())<0)continue;if(m==='')delete S.dayMin[d];else S.dayMin[d]=Math.max(0,parseInt(m,10)||0);n++;}
+  closeModal();commit();toast(n+' días actualizados.');
+}
+/* ===== Fechas del máster precargadas (una sola vez; suma, no sustituye) ===== */
+var FECHAS=[["2026-11-16","Metodología de la Investigación I","seminario","Sesión 1 – Introducción a SPSS y manejo de variables","16:30","19:30"],["2026-11-30","Metodología de la Investigación I","seminario","Sesión 2 – Estadística descriptiva","16:30","19:30"],["2026-12-21","Metodología de la Investigación I","seminario","Sesión 3 – Contraste de hipótesis","16:30","19:30"],["2027-01-11","Metodología de la Investigación I","seminario","Sesión 4 – Diseño de investigación cuantitativo","16:30","19:30"],["2027-02-02","Metodología de la Investigación II","seminario","Sesión 1 – Presentación de la asignatura y conceptos de epistemología y paradigma","17:30","19:30"],["2027-02-09","Metodología de la Investigación II","seminario","Sesión 2 – Seminario de investigación cuantitativa","17:30","19:30"],["2027-03-09","Metodología de la Investigación II","seminario","Sesión 3 – Proceso de análisis de datos","17:30","19:30"],["2027-04-06","Metodología de la Investigación II","seminario","Sesión 4 – Resolución de dudas y enfoque del TFM investigador","17:30","19:30"],["2026-11-10","Teoría del Conocimiento","seminario","Sesión 1 – Presentación y Teoría de los Saberes Enfermeros","17:30","19:30"],["2026-11-24","Teoría del Conocimiento","seminario","Sesión 2 – Noción de paradigma","17:30","19:30"],["2026-12-01","Teoría del Conocimiento","seminario","Sesión 3 – Saberes e instituciones de salud","17:30","19:30"],["2026-12-15","Teoría del Conocimiento","seminario","Sesión 4 – Naturaleza política y de género de la acción del cuidado","17:30","19:30"],["2027-01-12","Teoría del Conocimiento","seminario","Sesión 5 – Relación entre teoría, práctica e investigación","17:30","19:30"],["2027-01-19","Teoría del Conocimiento","seminario","Sesión 6 – Naturaleza práctico-reflexiva de los saberes enfermeros","17:30","19:30"],["2027-02-01","Sistemas Sanitarios","seminario","Sesión 1 – Optimizando la gestión sanitaria","17:30","19:30"],["2027-02-08","Sistemas Sanitarios","seminario","Sesión 2 – Prescripción enfermera","17:30","19:30"],["2027-03-29","Sistemas Sanitarios","seminario","Sesión 3 – Enfermería, cronicidad y modelo sanitario","17:30","19:30"],["2027-04-05","Sistemas Sanitarios","seminario","Sesión 4 – Modelos de gestión sanitaria","17:30","19:30"],["2027-02-11","Gestión Sanitaria","seminario","Sesión 1 – Presentación de la asignatura","17:30","19:30"],["2027-03-04","Gestión Sanitaria","seminario","Sesión 2 – Seguridad del paciente","17:30","19:30"],["2027-03-18","Gestión Sanitaria","seminario","Sesión 3 – Gestión por procesos","17:30","19:30"],["2027-04-08","Gestión Sanitaria","seminario","Sesión 4 – Gestión de costes en la gestión","17:30","19:30"],["2026-11-04","Función Directiva","seminario","Sesión 1 – Presentación de la asignatura","18:30","20:30"],["2026-11-18","Función Directiva","seminario","Sesión 2 – Aprendizaje basado en casos prácticos de gestión enfermera","18:30","20:30"],["2026-12-09","Función Directiva","seminario","Sesión 3 – Aspectos prácticos de la función directiva","18:30","20:30"],["2027-01-13","Función Directiva","seminario","Sesión 4 – Preparación para una convocatoria de un puesto de gestión de Enfermería","18:30","20:30"],["2027-04-19","Servicios de Enfermería","seminario","Sesión 1 – Introducción a la Gestión de los Servicios de Enfermería","18:30","20:30"],["2027-05-03","Servicios de Enfermería","seminario","Sesión 2 – Cálculo de plantilla en Unidades de Enfermería","18:30","20:30"],["2027-05-17","Servicios de Enfermería","seminario","Sesión 3 – Gestión de unidades de cuidados críticos","18:30","20:30"],["2027-06-07","Servicios de Enfermería","seminario","Sesión 4 – La Dirección de Enfermería de un hospital","18:30","20:30"],["2027-05-05","Bioética y Derecho","seminario","Sesión 1 – Responsabilidades jurídicas en la práctica asistencial. Parte I","17:30","19:30"],["2027-05-19","Bioética y Derecho","seminario","Sesión 2 – Responsabilidades en la práctica asistencial. Parte II","17:30","19:30"],["2027-06-02","Bioética y Derecho","seminario","Sesión 3 – Confidencialidad y datos de salud. Secreto profesional","17:30","19:30"],["2027-06-16","Bioética y Derecho","seminario","Sesión 4 – Objeción de conciencia / LORE","17:30","19:30"],["2026-11-23","Metodología de la Investigación I","entrega","Actividad 1 – Cuestionario individual","",""],["2026-11-30","Metodología de la Investigación I","entrega","Actividad 2 – Manejo de variables","",""],["2026-12-21","Metodología de la Investigación I","entrega","Actividad 3 – Aplicación de estadística descriptiva","",""],["2027-01-11","Metodología de la Investigación I","entrega","Actividad 4 – Aplicación de estadística inferencial","",""],["2027-01-25","Metodología de la Investigación I","entrega","Actividad 5 – Búsqueda bibliográfica y lectura crítica de artículos","",""],["2027-02-16","Metodología de la Investigación II","entrega","Actividad 1 – Diseño de investigación cualitativa (Individual)","",""],["2027-04-06","Metodología de la Investigación II","entrega","Actividad 2 – Diseño de investigación cualitativa (Grupal)","",""],["2027-05-11","Metodología de la Investigación II","entrega","Actividad 3 – Investigación-acción","",""],["2026-12-06","Teoría del Conocimiento","entrega","Actividad 1 – Comparación de paradigmas (Grupal)","",""],["2026-12-22","Teoría del Conocimiento","entrega","Actividad 2 – Ensayo individual: reflexión sobre un tema de actualidad (Grupal)","",""],["2027-01-19","Teoría del Conocimiento","entrega","Actividad 3 – Problemas teóricos y problemas prácticos (Individual)","",""],["2027-01-26","Teoría del Conocimiento","examen","Actividad 4 – Test de conocimientos (Individual)","",""],["2027-02-08","Sistemas Sanitarios","entrega","Actividad 1 – Sistema Nacional de Salud (Grupal)","",""],["2027-03-29","Sistemas Sanitarios","entrega","Actividad 2 – El Sistema Nacional de Salud y su repercusión sobre el PIB (Individual)","",""],["2027-04-12","Sistemas Sanitarios","entrega","Actividad 3 – Misión y visión del Sistema Nacional de Salud (Grupal)","",""],["2027-04-26","Sistemas Sanitarios","entrega","Actividad 4 – Aspectos sociosanitarios (Individual)","",""],["2027-05-10","Sistemas Sanitarios","examen","Actividad 5 – Evaluación final (Individual)","",""],["2027-03-04","Gestión Sanitaria","entrega","Actividad 1 – Historia clínica del paciente (Individual)","",""],["2027-03-18","Gestión Sanitaria","entrega","Actividad 2 – Seguridad del paciente y riesgos asistenciales (Grupal)","",""],["2027-04-08","Gestión Sanitaria","entrega","Actividad 3 – Gestión por procesos (Grupal)","",""],["2027-04-27","Gestión Sanitaria","examen","Actividad 4 – Autoevaluación (Individual)","",""],["2026-11-11","Función Directiva","entrega","Actividad 1 – Reflexión sobre liderazgo (Individual)","",""],["2026-12-09","Función Directiva","entrega","Actividad 2 – La comunicación en las organizaciones sanitarias (Grupal)","",""],["2026-12-23","Función Directiva","entrega","Actividad 3 – La importancia del trabajo en equipo en las organizaciones sanitarias (Individual)","",""],["2027-01-06","Función Directiva","entrega","Actividad 4 – La motivación en las organizaciones sanitarias (Individual)","",""],["2026-12-31","Función Directiva","entrega","Actividad 5 – Actividad global (Individual)","",""],["2027-05-03","Servicios de Enfermería","entrega","Actividad 1 – Describiendo mi puesto de trabajo (Individual)","",""],["2027-05-24","Servicios de Enfermería","entrega","Actividad 2 – Cálculo de plantilla de una Unidad de Enfermería (Grupal)","",""],["2027-06-07","Servicios de Enfermería","entrega","Actividad 3 – Gestión enfermera en una unidad de cuidados críticos (Grupal)","",""],["2027-06-28","Servicios de Enfermería","entrega","Actividad 4 – Pacto de objetivos. Definición de indicadores (Individual)","",""],["2027-07-05","Servicios de Enfermería","examen","Actividad 5 – Prueba de conocimientos (Individual)","",""],["2027-05-19","Bioética y Derecho","entrega","Actividad 1 – La historia clínica (Individual)","",""],["2027-06-09","Bioética y Derecho","entrega","Actividad 2 – Resolución de casos prácticos (Grupal)","",""],["2027-06-30","Bioética y Derecho","entrega","Actividad 3 – Objeción de conciencia en la práctica profesional (Individual)","",""],["2027-07-14","Bioética y Derecho","entrega","Actividad 4 – Simulación aplicada a un caso real (Individual)","",""]];   /* [fecha, asignatura, tipo, título, inicio, fin] */
+var AGENDA_SEED=[["2026-10-29","Bienvenida al Máster – UEM – Villaviciosa de Odón","16:00"]]; /* [fecha, título, hora] */
+function seedFechas(){
+  var evKey={},n=0;
+  /* si ya habías importado el .ics del máster como agenda, esos duplicados se retiran: ahora son fechas de asignatura */
+  S.agenda=S.agenda.filter(function(e){return !(e.src==='ics'&&/@masterapp$/.test(e.gid));});
+  S.events.forEach(function(e){evKey[e.date+'|'+e.subjectId+'|'+normS(e.title)]=1;});
+  FECHAS.forEach(function(f){
+    var sb=null;S.subjects.forEach(function(s){if(normS(s.name)===normS(f[1]))sb=s;});
+    if(!sb){sb={id:'s'+uid(),name:f[1],units:[]};S.subjects.push(sb);}
+    var k=f[0]+'|'+sb.id+'|'+normS(f[3]);if(evKey[k])return;evKey[k]=1;
+    var m=f[4]&&f[5]?Math.max(0,toMin(f[5])-toMin(f[4])):0;
+    S.events.push({id:uid(),date:f[0],subjectId:sb.id,type:f[2],title:f[3],minutes:m,start:f[4]||'',end:f[5]||''});n++;
+  });
+  var agKey={};S.agenda.forEach(function(e){agKey[e.date+'|'+normS(e.title)]=1;});
+  AGENDA_SEED.forEach(function(a){if(agKey[a[0]+'|'+normS(a[1])])return;
+    S.agenda.push({id:uid(),gid:'',src:'manual',title:a[1],cat:'otro',date:a[0],allDay:!a[2],start:a[2]||'',end:''});});
+  return n;
+}
+/* ===== Replanificar a mano ===== */
+function putStatus(base,s){
+  var cur=S.statuses[base.key];if(cur)revertStatus(cur);
+  var f=findTopic(base.tid),sb=subj(base.sid);
+  var e={key:base.key,date:base.date,kind:base.kind,tid:base.tid,sid:base.sid,k:base.k,min:base.min,s:s,spent:0,title:f?f.t.name:'',sub:sb?sb.name:''};
+  S.statuses[base.key]=e;applyStatus(e);
+}
+function openReplan(){
+  var t=today(),pend=(P.plan[t]||[]).length;
+  function opt(act,ic,tt,sub){return '<button class="btn" style="display:block;width:100%;text-align:left;margin-bottom:8px" data-act="'+act+'"><b>'+ic+' '+tt+'</b><div class="mu">'+sub+'</div></button>';}
+  openModal('<h3>Replanificar</h3><div class="mu" style="margin-bottom:10px">Elige qué ha cambiado. El plan se recalcula al momento y reparte lo pendiente en los próximos huecos, sin amontonarlo en un solo día.</div>'+
+    opt('rpToday','🛑','Hoy no puedo estudiar','Quita el estudio de hoy y pasa lo pendiente a otros días.')+
+    (pend?opt('rpPush','⏭','Aplazar lo pendiente de hoy','Marca las '+pend+' tareas pendientes como no hechas (queda registro), las recoloca en otros días y hoy no se añade más estudio.'):'')+
+    opt('rpOff','🏖','No estudiaré varios días','Enfermedad, viaje, guardias extra… Eliges desde cuándo y hasta cuándo.')+
+    opt('rpExtra','⏱','Tengo tiempo extra unos días','Suma minutos a cada día de estudio durante una semana o las que quieras para ponerte al día.')+
+    opt('rpRe','🔄','Recalcular el plan ahora','Vuelve a repartir todo con los datos actuales (útil tras editar temas, fechas o turnos).')+
+    '<div class="mb"><button class="btn pri" data-act="closeM">Cerrar</button></div>');
+}
+/* ===== Temario precargado (una sola vez; suma, no sustituye) ===== */
+var TEMARIO=[{"s":"Metodología de la Investigación I","u":[{"n":"Unidad 1. Metodología de la investigación cuantitativa","t":[["Tema 1. ¿Qué es investigar?",1],["Tema 2. Tipos de estudio",1],["Tema 3. Muestreo y psicometría",1],["Tema 4. Criterios de calidad en la investigación",0]]},{"n":"Unidad 2. Preparación de los datos e iniciación a SPSS","t":[["Tema 5. Preparación de los datos con SPSS",0],["Tema 6. Transformación de datos: recodificar datos",0],["Tema 7. Transformación de datos: calcular y contar apariciones",0],["Tema 8. Seleccionar y filtrar casos",0]]},{"n":"Unidad 3. Estadística descriptiva","t":[["Tema 9. Descripción de variables cualitativas",0],["Tema 10. Descripción de variables cuantitativas",0],["Tema 11. Descripción de variables cuantitativas con SPSS",0],["Tema 12. Informes, tablas y gráficos",0]]},{"n":"Unidad 4. Probabilidad","t":[["Tema 13. Leyes de la probabilidad",0],["Tema 14. Aplicaciones de la probabilidad a las Ciencias de la Salud: teorema de Bayes",0],["Tema 15. Distribución de la probabilidad: binomial, Poisson y normal",0],["Tema 16. Estimación de parámetros, intervalos de confianza y tamaño de las muestras",0]]},{"n":"Unidad 5. Comparación de hipótesis","t":[["Tema 17. El planteamiento de hipótesis y la significación estadística",0],["Tema 18. Relación entre dos variables categóricas: pruebas de ji cuadrado",0],["Tema 19. Comparación de medias",0],["Tema 20. Correlación y regresión lineal",0]]},{"n":"Unidad 6. Búsqueda bibliográfica y lectura crítica de artículos","t":[["Tema 21. Fuentes de información bibliográfica",0]]}]},{"s":"Metodología de la Investigación II","u":[{"n":"Unidad 1. Raíces y supuestos de la investigación interpretativa","t":[["Tema 1. Raíces históricas",0],["Tema 2. Explicación y comprensión I",0],["Tema 3. Explicación y comprensión II",0],["Tema 4. El papel de la teoría en la investigación cualitativa",0]]},{"n":"Unidad 2. Aproximaciones metodológicas I","t":[["Tema 5. Diseño de la investigación: del tema a las preguntas",0],["Tema 6. La revisión documental",0],["Tema 7. La etnografía: proceso etnográfico",0],["Tema 8. La investigación fenomenológica en enfermería",0]]},{"n":"Unidad 3. Aproximaciones metodológicas II","t":[["Tema 9. La teoría fundamentada",0],["Tema 10. Investigación-acción I",0],["Tema 11. Investigación-acción II",0],["Tema 12. Investigación evaluativa",0]]},{"n":"Unidad 4. Estrategias de recogida de datos","t":[["Tema 13. Técnicas de observación",0],["Tema 14. La entrevista cualitativa",0],["Tema 15. Técnicas comunicacionales: entrevistas grupales",0],["Tema 16. Análisis de documentos",0]]},{"n":"Unidad 5. El rigor y la ética en la investigación cualitativa","t":[["Tema 17. Criterios de rigor de la investigación",0],["Tema 18. Rigor y calidad en la investigación cualitativa",0],["Tema 19. Dimensiones éticas de la investigación cualitativa I",0],["Tema 20. Dimensiones éticas de la investigación cualitativa II",0]]},{"n":"Unidad 6. Análisis de datos y elaboración del informe final","t":[["Tema 21. Conceptualización y características del análisis de datos",0]]}]},{"s":"Teoría del Conocimiento","u":[{"n":"Unidad 1. Introducción a la Teoría de los Saberes Enfermeros","t":[["T1. ¿Qué es la epistemología enfermera?",0],["T2. En qué consiste el desaprendizaje",0],["T3. Bases y principios del desaprendizaje",0],["T4. El proceso de desaprendizaje",0]]},{"n":"Unidad 2. La Noción de Paradigma y los Paradigmas ¿Enfermeros?","t":[["T5. La noción de paradigma",0],["T6. El paradigma empírico-analítico",0],["T7. El paradigma hermenéutico-fenomenológico",0],["T8. El paradigma sociocrítico",0]]},{"n":"Unidad 3. Saberes, prácticas e instituciones de salud: génesis e influencia mutuas","t":[["T9. El origen de los saberes sanitarios: la relación saber-poder",0],["T10. Para entender a Foucault: conceptos clave",0],["T11. El paradigma de la complejidad",0],["T12. La complejidad del cuidado y el cuidado de la complejidad humana",0]]},{"n":"Unidad 4. La naturaleza política y de género de la práctica del cuidado","t":[["T13. El cuidado, saberes y prácticas y relaciones de poder",0],["T14. Hegemonía y poder de las instituciones sanitarias",0],["T15. Género y relaciones de poder en las instituciones sanitarias",0],["T16. La construcción de una identidad profesional subordinada",0]]},{"n":"Unidad 5. La relación teoría-práctica-investigación","t":[["T17. La relación teoría-práctica en el cuidado enfermero",0],["T18. La concepción tecnológica (tradicional) de la relación teórica-práctica",0],["T19. Una visión alternativa de la relación teoría-práctica-investigación en Enfermería",0],["T20. Resumen gráfico",0]]},{"n":"Unidad 6. La naturaleza práctico-reflexiva de los saberes enfermeros","t":[["T21. El redescubrimiento del saber práctico de la enfermera",0],["T22. La enfermería como ciencia humana práctica",0],["T23. La naturaleza práctica de la acción del cuidar",0],["T24. El sentido moral de la acción de cuidar",0]]}]},{"s":"Sistemas Sanitarios","u":[{"n":"Unidad 1. Sistema sanitario español","t":[["Tema 1. Orígenes e historia del sistema sanitario español",0],["Tema 2. La Ley General de Sanidad 14/86 y su desarrollo",0],["Tema 3. Mecanismos de coordinación del sistema. El Consejo Territorial",0],["Tema 4. Atención sociosanitaria, urgencias y emergencias, continuidad asistencial y ley 41/2002",0]]},{"n":"Unidad 2. Economía y salud","t":[["Tema 5. Introducción a la economía de la salud",0],["Tema 6. Macroeconomía: análisis del entorno",0],["Tema 7. Microeconomía",0],["Tema 8. Política económica internacional",0]]},{"n":"Unidad 3. Estrategias en las empresas","t":[["Tema 9. La cadena de valor y los factores clave de éxito",0],["Tema 10. Los análisis DAFO",0],["Tema 11. La explotación del análisis DAFO para generar propuestas de acción",0],["Tema 12. La misión, visión, valores y los objetivos",0]]},{"n":"Unidad 4. Demandas y recursos en las políticas sociosanitarias","t":[["Tema 13. Ley de Dependencia",0],["Tema 14. Respuesta urgente sociosanitaria",0],["Tema 15. Aspectos generales en la atención a los menores",0],["Tema 16. Adicciones",0]]},{"n":"Unidad 5. La financiación sanitaria y nuevos modelos de gestión","t":[["Tema 17. El sistema de financiación: desde el INP al SNS",0],["Tema 18. Modalidades de gestión sanitaria en España",0],["Tema 19. Nuevos modelos: concesiones administrativas de gestión privada",0],["Tema 20. El modelo iniciativa de financiación privada (PFI)",0]]}]},{"s":"Gestión Sanitaria","u":[{"n":"Unidad 1. Conceptos de empresa","t":[["Tema 1. Introducción al concepto de empresa",0],["Tema 2. El entorno de la empresa",0],["Tema 3. Los tipos de empresa",0],["Tema 4. Las formas de crecimiento de la empresa",0]]},{"n":"Unidad 2. La organización sanitaria como empresa de servicios","t":[["Tema 5. Introducción a la función de producción",0],["Tema 6. Eficiencia, costes de producción y tecnología",0],["Tema 7. El hospital como empresa de servicios",0],["Tema 8. La producción sanitaria en la atención primaria de salud",0]]},{"n":"Unidad 3. Gestión de pacientes y documentación clínica","t":[["Tema 9. Historia clínica",0],["Tema 10. La gestión de pacientes",0],["Tema 11. Sistemas de información sanitaria",0],["Tema 12. Atención al paciente",0]]},{"n":"Unidad 4. La seguridad del paciente y los riesgos asistenciales","t":[["Tema 13. El paciente y su seguridad",0],["Tema 14. Control de los eventos adversos. Alianzas mundiales",0],["Tema 15. El registro y la notificación de eventos adversos",0],["Tema 16. Herramientas para alcanzar la seguridad de los pacientes",0]]},{"n":"Unidad 5. Gestión clínica","t":[["Tema 17. La gestión clínica y gestión de cuidados en enfermería",0],["Tema 18. Gestión por procesos",0],["Tema 19. Vías clínicas como herramienta organizativa",0],["Tema 20. Contratos de gestión y dirección por objetivos",0]]},{"n":"Unidad 6. Gestión de costes y de recursos materiales","t":[["Tema 21. Estructura de costes en el hospital",0],["Tema 22. Gestión de los procesos de compras",0],["Tema 23. Logística de almacenes y equipamiento hospitalario",0],["Tema 24. La externalización de servicios",0]]}]},{"s":"Servicios de Enfermería","u":[{"n":"Unidad 1. Los servicios enfermeros: empresa de servicios","t":[["Tema 1. Desarrollo de las direcciones de enfermería",0],["Tema 2. Plan estratégico de enfermería",0],["Tema 3. El equipo de enfermería",0],["Tema 4. Las unidades: funcionamiento y cuadro de mando",0]]},{"n":"Unidad 2. La gestión de recursos humanos enfermeros","t":[["Tema 5. Planificación y diseño de puestos",0],["Tema 6. Reclutamiento y selección",0],["Tema 7. La dotación de los recursos enfermeros",0],["Tema 8. Evaluación del desempeño",0]]},{"n":"Unidad 3. Gestión clínica de cuidados","t":[["Tema 9. Gestión del producto enfermero",0],["Tema 10. Gestión de las áreas quirúrgicas",0],["Tema 11. Gestión de las unidades de cuidados críticos",0],["Tema 12. Gestión de los cuidados paliativos",0]]},{"n":"Unidad 4. Experiencias de gestión en enfermería","t":[["Tema 13. Fundación San José. Modelo de gestión",0],["Tema 14. Hospital Universitario Fuenlabrada. Empresa pública",0],["Tema 15. Hospital Universitario Puerta de Hierro. Modelo en transición",0],["Tema 16. Hospital Universitario 12 de Octubre. Modelo tradicional",0]]},{"n":"Unidad 5. Sistemas de información para la gestión","t":[["Tema 17. La gestión de investigación",0],["Tema 18. La gestión de la calidad",0],["Tema 19. La gestión del conocimiento",0],["Tema 20. La historia clínica informatizada",0]]},{"n":"Unidad 6. La gestión enfermera en atención primaria","t":[["Tema 21. La gestión enfermera en Atención Primaria (AP)",0],["Tema 22. La gestión del centro de salud",0],["Tema 23. La gestión de la visita de enfermería",0],["Tema 24. La gestión del trabajo con la comunidad",0]]}]},{"s":"Bioética y Derecho","u":[{"n":"Unidad 1. Bioética, ética, ética profesional y derecho","t":[["Tema 1. Conceptos de bioética y ética",0],["Tema 2. Derecho y ética profesional",0],["Tema 3. Derechos y deberes de los usuarios",0]]},{"n":"Unidad 2. Derecho: concepto, clasificación y estructura procesal","t":[["Tema 4. Concepto de Derecho, división y fuentes",0],["Tema 5. La norma jurídica",0],["Tema 6. Derecho penal y sistema judicial",0]]},{"n":"Unidad 3. Aspectos legales del ejercicio profesional I","t":[["Tema 7. Responsabilidad civil",0],["Tema 8. Responsabilidad patrimonial",0],["Tema 9. La historia clínica y el consentimiento informado",0]]},{"n":"Unidad 4. Aspectos legales del ejercicio profesional II","t":[["Tema 10. Lex artis, mala praxis, imprudencia, negligencia, impericia",0],["Tema 11. Protección de datos en el ámbito sanitario",0],["Tema 12. Responsabilidad penal. Delitos. Práctica asistencial",0]]},{"n":"Unidad 5. Dilemas éticos del principio y final de la vida","t":[["Tema 13. El principio de la vida y sus dilemas",0],["Tema 14. El final de la vida y sus dilemas",0]]}]}];
+function normS(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function seedTemario(){
+  var back='2026-10-23',added=0;
+  TEMARIO.forEach(function(m){
+    var sb=null;S.subjects.forEach(function(s){if(normS(s.name)===normS(m.s))sb=s;});
+    if(!sb)return;
+    m.u.forEach(function(u){
+      var un=null;sb.units.forEach(function(x){if(normS(x.name)===normS(u.n))un=x;});
+      if(!un){un={id:uid(),name:u.n,topics:[]};sb.units.push(un);}
+      u.t.forEach(function(t){
+        var nt=normS(t[0]),ex=false;un.topics.forEach(function(x){if(normS(x.name)===nt)ex=true;});if(ex)return;
+        un.topics.push({id:uid(),name:t[0],diff:'normal',studied:t[1]?back:null,revs:[null,null,null],remain:0,lastTouch:t[1]?back:null});added++;
+      });
+    });
+  });
+  return added;
+}
+function openTopic(id){
+  var f=findTopic(id);if(!f)return;var tp=f.t;
+  openModal('<h3>Tema</h3><div class="mu">'+esc(f.s.name)+' · '+esc(f.u.name)+'</div><label>Nombre<input id="f_n" value="'+esc(tp.name)+'"></label><label>Dificultad<select id="f_d">'+opts(DF,tp.diff)+'</select></label>'+
+    '<label class="chk" style="margin-top:12px"><input type="checkbox" id="f_s" '+(tp.studied?'checked':'')+'> Ya estudiado</label><label>Fecha en que lo estudié<input id="f_sd" type="date" value="'+(tp.studied||today())+'"></label>'+
+    '<div class="mb"><button class="btn danger" data-act="delTopic" data-id="'+id+'">Eliminar</button><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="saveTopic" data-id="'+id+'">Guardar</button></div>');
+}
+function openText(title,label,act,id,initial,extra){
+  openModal('<h3>'+title+'</h3><label>'+label+'</label><input id="f_n" value="'+esc(initial||'')+'">'+(extra||'')+'<div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="'+act+'" data-id="'+esc(id)+'">Guardar</button></div>');
+}
+function linesOf(txt){return String(txt).split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);}
+function mkTopics(lines,diff){return lines.map(function(n){return {id:uid(),name:n,diff:diff,studied:null,revs:[null,null,null],remain:0,lastTouch:null};});}
+
+/* ====== Exportar / importar ====== */
+function download(name,text,mime){
+  try{var b=new Blob([text],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(function(){a.remove();URL.revokeObjectURL(u);},1500);return true;}catch(e){return false;}
+}
+function exportJSON(){
+  S.lastExport=new Date().toISOString();persist();
+  var txt=JSON.stringify({app:APP,version:SCHEMA,exportedAt:S.lastExport,data:S},null,1);
+  var ok=download('plan-estudio_'+today()+'.json',txt,'application/json');
+  render();
+  if(ok)toast('Copia exportada. Guárdala en un sitio seguro.');
+  else{toast('No se pudo descargar. Copia el texto manualmente.');openTextView(txt);}
+}
+function shareJSON(){
+  S.lastExport=new Date().toISOString();persist();
+  var txt=JSON.stringify({app:APP,version:SCHEMA,exportedAt:S.lastExport,data:S},null,1),name='plan-estudio.json';
+  try{
+    var f=new File([txt],name,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})&&navigator.share){
+      navigator.share({files:[f],title:'Copia del plan de estudio'}).then(function(){render();toast('Elige «Drive» en el menú para guardarla.');}).catch(function(){});
+      return;
+    }
+  }catch(e){}
+  toast('Tu navegador no puede compartir archivos. Se descarga la copia: súbela a Drive a mano.');exportJSON();
+}
+function openTextView(txt){openModal('<h3>Copia como texto</h3><div class="mu">Copia todo este texto y guárdalo en un archivo .json, o pégalo en «Importar copia» en otro dispositivo.</div><textarea id="f_t" readonly style="min-height:200px;font-size:.7rem">'+esc(txt)+'</textarea><div class="mb"><button class="btn pri" data-act="closeM">Cerrar</button></div>');}
+function importText(txt){
+  var o;try{o=JSON.parse(txt);}catch(e){toast('El archivo no es un JSON válido.');return;}
+  if(!isObj(o)||o.app!==APP||!isObj(o.data)){toast('Este archivo no es una copia de este plan de estudio.');return;}
+  if(typeof o.version!=='number'||o.version>SCHEMA){toast('La copia es de una versión más nueva de la app. Abre la versión más reciente del archivo.');return;}
+  if(!Array.isArray(o.data.subjects)){toast('La copia está incompleta (faltan asignaturas).');return;}
+  var nd;try{nd=normalize(migrate(o.data,o.version));}catch(e){toast('No se pudo leer la copia.');return;}
+  pendingImport=nd;
+  var older=nd.updated<S.updated;
+  openModal('<h3>Importar copia</h3><p>La copia tiene <b>'+nd.subjects.reduce(function(a,s){return a+countTopics(s).tot;},0)+' temas</b> y <b>'+nd.events.length+' fechas</b>, modificada por última vez el <b>'+fmtIso(nd.updated)+'</b>.</p>'+
+    '<p>Sustituirá todos tus datos actuales (última modificación: <b>'+fmtIso(S.updated)+'</b>).</p>'+
+    (older?'<div class="banner bad">⚠️ La copia es MÁS ANTIGUA que tus datos actuales. Si continúas, perderás los cambios posteriores. Exporta antes una copia de lo actual si dudas.</div>':'')+
+    '<div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn danger" data-act="impGo">Sustituir mis datos</button></div>');
+}
+function openImport(){
+  openModal('<h3>Importar copia</h3><label>Elige el archivo .json</label><input type="file" id="impFile" accept=".json,application/json"><label>…o pega aquí el texto de la copia</label><textarea id="impTxt" placeholder="{ ... }"></textarea><div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="impPaste">Importar texto</button></div>');
+}
+function icsEsc(s){return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');}
+function fold(l){var o='';while(l.length>60){o+=l.slice(0,60)+'\r\n ';l=l.slice(60);}return o+l;}
+function hm(min){min=Math.min(min,1439);return p2(Math.floor(min/60))+p2(min%60)+'00';}
+function buildICS(){
+  var L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Plan de estudio//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Plan de estudio'];
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  S.events.forEach(function(e){
+    var ds0=e.date.replace(/-/g,'');
+    L.push('BEGIN:VEVENT','UID:ev-'+e.id+'@plan-estudio','DTSTAMP:'+stamp,
+      e.start?'DTSTART:'+ds0+'T'+hm(toMin(e.start)):'DTSTART;VALUE=DATE:'+ds0,
+      e.start?'DTEND:'+ds0+'T'+hm(e.end?toMin(e.end):toMin(e.start)+(e.minutes||60)):'DTEND;VALUE=DATE:'+addD(e.date,1).replace(/-/g,''),
+      'SUMMARY:'+icsEsc(EV[e.type].n+': '+evLabel(e)),
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio','TRIGGER:-PT15H','END:VALARM',
+      'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Recordatorio','TRIGGER:-P6DT15H','END:VALARM','END:VEVENT');});
+  Object.keys(P.plan).sort().forEach(function(d){
+    var tasks=P.plan[d],lay=layoutDay(d,tasks),ds=d.replace(/-/g,'');
+    tasks.forEach(function(x){
+      var tm=lay[x.key];if(!tm)return;var sb=subj(x.sid);
+      L.push('BEGIN:VEVENT','UID:est-'+d+'-'+x.kind+'-'+x.tid+'-'+x.k+'@plan-estudio','DTSTAMP:'+stamp,'DTSTART:'+ds+'T'+hm(tm[0]),'DTEND:'+ds+'T'+hm(tm[1]),
+        'SUMMARY:'+icsEsc('Estudio: '+topicTitle(x.tid)+' ('+kindLabel(x)+')'),'DESCRIPTION:'+icsEsc((sb?sb.name:'')+' · '+x.min+' min'),
+        'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Estudio','TRIGGER:-PT10M','END:VALARM','END:VEVENT');});});
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n')+'\r\n';
+}
+
+/* ====== Acciones ====== */
+function setPath(o,path,v){var p=path.split('.');for(var i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=v;}
+function act(a,el){
+  var ds=el.dataset,id=ds.id,f,i;
+  switch(a){
+  case 'tab':tab=ds.t;render();window.scrollTo(0,0);break;
+  case 'closeM':closeModal();break;
+  case 'dismissRoll':rollNote='';render();break;
+  case 'st':setStatus(ds.key,ds.s);break;
+  case 'calMode':cal.mode=ds.m;render();break;
+  case 'calToday':cal.cur=today();render();break;
+  case 'calNav':
+    if(cal.mode==='day')cal.cur=addD(cal.cur,+ds.n);
+    else if(cal.mode==='week')cal.cur=addD(cal.cur,7*(+ds.n));
+    else{var c=pd(cal.cur);cal.cur=fd(new Date(c.getFullYear(),c.getMonth()+(+ds.n),1));}
+    render();break;
+  case 'day':openDay(ds.d);break;
+  case 'setTurn':S.overrides[ds.d]=ds.ty;commit();openDay(ds.d);break;
+  case 'resetTurn':delete S.overrides[ds.d];commit();openDay(ds.d);break;
+  case 'saveDayMin':{var v=val('dm').trim();if(v==='')delete S.dayMin[ds.d];else S.dayMin[ds.d]=Math.max(0,parseInt(v,10)||0);commit();openDay(ds.d);break;}
+  case 'filReset':fil={type:'',sid:'',when:'up'};render();break;
+  case 'tmStart':tmStart(ds.key);break;
+  case 'tmPause':tmPause();break;
+  case 'tmResume':tmResume();break;
+  case 'tmResume2':closeModal();tmResume();break;
+  case 'tmStop':tmStop();break;
+  case 'tmFin':tmFin(ds.s);break;
+  case 'tmDrop':S.timer=null;closeModal();commit();toast('Cronómetro descartado.');break;
+  case 'applyHab':S.settings.diff[ds.k]=Math.max(5,parseInt(ds.v,10)||S.settings.diff[ds.k]);commit();toast('Duración actualizada.');break;
+  case 'syncSaveId':sync.clientId=val('sy_id').trim();saveSync();if(sync.clientId)injectGIS();toast('ID guardado.');render();break;
+  case 'syncNow':if(document.getElementById('sy_id')&&val('sy_id').trim()!==sync.clientId){sync.clientId=val('sy_id').trim();saveSync();}syncNow(false);break;
+  case 'syncOff':sync.token='';sync.exp=0;sync.fileId='';sync.last='';sync.lastAt='';saveSync();syncMsg='';render();toast('Desconectado. Tus datos locales no se han tocado.');break;
+  case 'syncKeepDrive':if(pendingRemote){applyRemote(pendingRemote);pendingRemote=null;closeModal();syncDone('Se usaron los datos de Drive.');}break;
+  case 'syncKeepLocal':pendingRemote=null;closeModal();sync.busy=true;dUpload(sync.fileId).then(function(){syncDone('Se subieron los datos de este dispositivo.');}).catch(function(e){sync.busy=false;toast(String(e&&e.message||'No se pudo subir.'));});break;
+  case 'shareJSON':shareJSON();break;
+  case 'togS':openS[id]=!openS[id];render();break;
+  case 'togTopic':f=findTopic(id);if(f){var t=f.t;if(t.studied){t.studied=null;t.revs=[null,null,null];}else{t.studied=today();t.revs=[null,null,null];t.remain=0;}commit();}break;
+  case 'cycDiff':f=findTopic(id);if(f){f.t.diff=DFK[(DFK.indexOf(f.t.diff)+1)%3];commit();}break;
+  case 'editTopic':openTopic(id);break;
+  case 'saveTopic':f=findTopic(id);if(f){var tp=f.t,nm=val('f_n').trim();if(!nm){toast('Pon un nombre al tema.');break;}
+      tp.name=nm;tp.diff=DF[val('f_d')]?val('f_d'):'normal';
+      var chk=document.getElementById('f_s').checked,sd=val('f_sd');if(!isDate(sd)||sd>today())sd=today();
+      if(chk){if(!tp.studied||tp.studied!==sd){tp.studied=sd;if(!tp.revs.some(Boolean))tp.revs=[null,null,null];}tp.remain=0;}
+      else{tp.studied=null;tp.revs=[null,null,null];}
+      closeModal();commit();}break;
+  case 'delTopic':confirmBox('Se eliminará este tema.','doDelTopic',id,'Eliminar');break;
+  case 'doDelTopic':S.subjects.forEach(function(s){s.units.forEach(function(u){u.topics=u.topics.filter(function(t){return t.id!==id;});});});closeModal();commit();break;
+  case 'addTopics':openModal('<h3>Añadir temas</h3><label>Un tema por línea</label><textarea id="f_l" placeholder="Tema 1. Introducción&#10;Tema 2. ..."></textarea><label>Dificultad</label><select id="f_d">'+opts(DF,'normal')+'</select><div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="saveTopics" data-id="'+id+'" data-u="'+ds.u+'">Añadir</button></div>');break;
+  case 'saveTopics':{var sb=subj(id);if(!sb)break;var un=null;sb.units.forEach(function(u){if(u.id===ds.u)un=u;});var ln=linesOf(val('f_l'));
+      if(!un||!ln.length){toast('Escribe al menos un tema.');break;}
+      un.topics=un.topics.concat(mkTopics(ln,val('f_d')));openS[id]=true;closeModal();commit();break;}
+  case 'addUnit':openModal('<h3>Nueva unidad</h3><label>Nombre</label><input id="f_n" placeholder="Unidad 1"><label>Temas (opcional, uno por línea)</label><textarea id="f_l"></textarea><label>Dificultad de esos temas</label><select id="f_d">'+opts(DF,'normal')+'</select><div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="saveUnit" data-id="'+id+'">Crear</button></div>');break;
+  case 'saveUnit':{var sb2=subj(id);if(!sb2)break;var n2=val('f_n').trim();if(!n2){toast('Pon un nombre a la unidad.');break;}
+      sb2.units.push({id:uid(),name:n2,topics:mkTopics(linesOf(val('f_l')),val('f_d'))});openS[id]=true;closeModal();commit();break;}
+  case 'renUnit':{var s3=subj(id),u3=null;s3.units.forEach(function(u){if(u.id===ds.u)u3=u;});if(u3)openText('Renombrar unidad','Nombre','saveRenUnit',id+'|'+ds.u,u3.name);break;}
+  case 'saveRenUnit':{var pr=id.split('|'),s4=subj(pr[0]),nn=val('f_n').trim();if(s4&&nn){s4.units.forEach(function(u){if(u.id===pr[1])u.name=nn;});closeModal();commit();}break;}
+  case 'delUnit':confirmBox('Se eliminará la unidad y todos sus temas.','doDelUnit',id+'|'+ds.u,'Eliminar');break;
+  case 'doDelUnit':{var pq=id.split('|'),s5=subj(pq[0]);if(s5)s5.units=s5.units.filter(function(u){return u.id!==pq[1];});closeModal();commit();break;}
+  case 'renSub':{var s6=subj(id);if(s6)openText('Renombrar asignatura','Nombre','saveRenSub',id,s6.name);break;}
+  case 'saveRenSub':{var s7=subj(id),n7=val('f_n').trim();if(s7&&n7){s7.name=n7;closeModal();commit();}break;}
+  case 'addEv':closeModal();openEvent('',ds.d);break;
+  case 'editEv':openEvent(id);break;
+  case 'saveEv':{var dt=val('f_d');if(!isDate(dt)){toast('Elige una fecha válida.');break;}
+      var est=val('f_st'),een=val('f_en'),mn=Math.max(0,parseInt(val('f_m'),10)||0);
+      if(est&&een&&toMin(een)<=toMin(est)){toast('La hora de fin debe ser posterior al inicio.');break;}
+      if(est&&een&&!mn)mn=toMin(een)-toMin(est);
+      var obj={id:id||uid(),date:dt,subjectId:val('f_s'),type:val('f_t'),title:val('f_n').trim(),minutes:mn,start:est||'',end:een||''};
+      if(id)S.events=S.events.map(function(e){return e.id===id?obj:e;});else S.events.push(obj);
+      closeModal();commit();break;}
+  case 'delEv':confirmBox('Se eliminará esta fecha.','doDelEv',id,'Eliminar');break;
+  case 'doDelEv':S.events=S.events.filter(function(e){return e.id!==id;});closeModal();commit();break;
+  case 'cyc':i=+ds.i;S.cycle.pattern[i]=TYK[(TYK.indexOf(S.cycle.pattern[i])+1)%TYK.length];commit();break;
+  case 'cycAdd':S.cycle.pattern.push('libre');commit();break;
+  case 'cycDel':if(S.cycle.pattern.length>1){S.cycle.pattern.pop();commit();}break;
+  case 'cycPreset':S.cycle={start:mondayOf(today()),pattern:['manana','manana','manana','manana','manana','libre','libre']};commit();break;
+  case 'cycApply':{var tk=val('cycTxt').toUpperCase().split(/[\s,;-]+/).filter(Boolean),map={M:'manana',T:'tarde',N:'noche',S:'saliente',L:'libre',V:'vacaciones'},pat=[],bad=false;
+      tk.forEach(function(x){var k=map[x.charAt(0)];if(k)pat.push(k);else bad=true;});
+      if(bad||!pat.length){toast('Usa solo M, T, N, S, L o V separadas por espacios.');break;}
+      S.cycle.pattern=pat;commit();break;}
+  case 'viewDay':cal.mode='day';cal.cur=ds.d;tab='cal';closeModal();render();window.scrollTo(0,0);break;
+  case 'addAg':closeModal();openAg('',ds.d);break;
+  case 'editAg':closeModal();openAg(id);break;
+  case 'saveAg':saveAg(id);break;
+  case 'delAg':{var it=null;S.agenda.forEach(function(x){if(x.id===id)it=x;});if(!it)break;
+      var ser=it.gid?S.agenda.filter(function(x){return x.gid===it.gid;}).length:0;
+      openModal('<h3>Eliminar evento</h3><p>'+esc(it.title)+'</p><div class="mb"><button class="btn" data-act="closeM">Cancelar</button>'+(ser>1?'<button class="btn danger" data-act="doDelAgSer" data-id="'+id+'">Toda la serie ('+ser+')</button>':'')+'<button class="btn danger" data-act="doDelAg" data-id="'+id+'">Solo este</button></div>');break;}
+  case 'doDelAg':S.agenda=S.agenda.filter(function(x){return x.id!==id;});closeModal();commit();break;
+  case 'doDelAgSer':{var it2=null;S.agenda.forEach(function(x){if(x.id===id)it2=x;});var g=it2&&it2.gid;S.agenda=S.agenda.filter(function(x){return x.id!==id&&(!g||x.gid!==g);});closeModal();commit();break;}
+  case 'rpOpen':openReplan();break;
+  case 'rpToday':S.dayMin[today()]=0;closeModal();commit();toast('Hoy sin estudio. Lo pendiente se ha repartido en los próximos días.');break;
+  case 'rpPush':{var lst=(P.plan[today()]||[]).slice();lst.forEach(function(x){putStatus(x,'missed');});S.dayMin[today()]=spentOn(today());closeModal();commit();toast(lst.length+' tareas aplazadas a los próximos huecos.');break;}
+  case 'rpOff':closeModal();openRange(today(),addD(today(),2),0);break;
+  case 'rpExtra':openModal('<h3>Tiempo extra</h3><div class="g2"><label>Minutos extra por día<input id="rx_m" type="number" min="5" step="5" inputmode="numeric" value="20"></label><label>Durante (días)<input id="rx_n" type="number" min="1" max="60" inputmode="numeric" value="7"></label></div><div class="mu" style="margin-top:8px">Se suma a los días que ya tienen tiempo de estudio; los días a 0 (salientes, por ejemplo) se quedan como están. Empieza hoy.</div><div class="mb"><button class="btn" data-act="closeM">Cancelar</button><button class="btn pri" data-act="rpExtraGo">Aplicar</button></div>');break;
+  case 'rpExtraGo':{var xm=Math.max(0,parseInt(val('rx_m'),10)||0),xn=Math.min(60,Math.max(1,parseInt(val('rx_n'),10)||1)),cnt=0;
+      for(var q=0;q<xn;q++){var dq=addD(today(),q),bq=capOf(dq,true);if(bq>0){S.dayMin[dq]=bq+xm;cnt++;}}
+      closeModal();commit();toast('+'+xm+' min en '+cnt+' días.');break;}
+  case 'rpRe':closeModal();commit();toast('Plan recalculado.');break;
+  case 'dayOff':S.dayMin[ds.d]=0;commit();openDay(ds.d);break;
+  case 'icsOpen':openICS();break;
+  case 'icsPaste':icsPreview(val('icsTxt'));break;
+  case 'icsGo':if(pendingICS){var r=pendingICS;pendingICS=null;var keep={};S.agenda.forEach(function(e){if(e.src==='ics'&&hasStudy(e))keep[e.gid+'|'+e.date]=e;});r.items.forEach(function(it){var k=keep[it.gid+'|'+it.date];if(k){it.study=k.study;it.studyAll=k.studyAll;it.studyPrio=k.studyPrio;it.studyFrom=k.studyFrom;it.studyTo=k.studyTo;}});S.agenda=S.agenda.filter(function(e){return !(e.src==='ics'&&r.gids[e.gid]);}).concat(r.items);closeModal();commit();toast(r.items.length+' eventos importados.');}break;
+  case 'icsClear':confirmBox('Se borrarán los eventos importados de Google Calendar. Los que creaste a mano se conservan.','doIcsClear','','Borrar importados');break;
+  case 'doIcsClear':S.agenda=S.agenda.filter(function(e){return e.src!=='ics';});closeModal();commit();break;
+  case 'openRange':closeModal();openRange(ds.d);break;
+  case 'applyRange':applyRange();break;
+  case 'clearDayMin':S.dayMin={};commit();toast('Se han quitado todos los tiempos por fecha.');break;
+  case 'expJSON':exportJSON();break;
+  case 'impOpen':openImport();break;
+  case 'impPaste':importText(val('impTxt'));break;
+  case 'impGo':if(pendingImport){S=pendingImport;pendingImport=null;closeModal();replan();persist();render();toast('Copia importada.');}break;
+  case 'expICS':{var ok=download('plan-estudio_'+today()+'.ics',buildICS(),'text/calendar');toast(ok?'Calendario exportado. Impórtalo en Google Calendar.':'No se pudo descargar el archivo.');break;}
+  case 'txtOpen':openTextView(JSON.stringify({app:APP,version:SCHEMA,exportedAt:new Date().toISOString(),data:S},null,1));break;
+  case 'wipe':confirmBox('Se borrarán <b>todos</b> tus temas, fechas, turnos, ajustes y progreso de este navegador. No se puede deshacer. Exporta antes una copia si no quieres perderlos.','wipeGo','','Borrar todo');break;
+  case 'wipeGo':try{localStorage.removeItem(KEY);}catch(e){}S=defaults();closeModal();replan();persist();tab='hoy';openS={};render();toast('Datos borrados.');break;
+  }
+}
+document.addEventListener('click',function(e){
+  if(e.target===$m){closeModal();return;}
+  var el=e.target.closest?e.target.closest('[data-act]'):null;if(!el)return;
+  if(el.type==='checkbox'&&el.dataset.act==='togTopic'){e.stopPropagation();}
+  try{act(el.dataset.act,el);}catch(err){toast('Error: '+(err&&err.message));}
+});
+document.addEventListener('change',function(e){
+  var el=e.target;if(!el||!el.dataset)return;
+  if(el.dataset.fil){fil[el.dataset.fil]=el.value;render();return;}
+  if(el.dataset.path){
+    var v=el.value,ty=el.dataset.type;
+    if(ty==='num')v=Math.max(0,Math.min(+el.dataset.max||100000,parseInt(v,10)||0));
+    else if(ty==='numopt')v=(String(v).trim()===''||isNaN(parseInt(v,10)))?null:Math.max(0,Math.min(1440,parseInt(v,10)));
+    else if(ty==='dateopt'){if(v!==''&&!isDate(v))return;}
+    else if(ty==='date'&&!isDate(v))return;
+    else if(ty==='time'&&!/^\d{2}:\d{2}$/.test(v))return;
+    setPath(S,el.dataset.path,v);commit();
+  }else if(el.id==='icsFile'&&el.files&&el.files[0]){
+    var r2=new FileReader();r2.onload=function(){icsPreview(String(r2.result));};r2.onerror=function(){toast('No se pudo leer el archivo.');};r2.readAsText(el.files[0]);
+  }else if(el.id==='impFile'&&el.files&&el.files[0]){
+    var r=new FileReader();r.onload=function(){importText(String(r.result));};r.onerror=function(){toast('No se pudo leer el archivo.');};r.readAsText(el.files[0]);
+  }
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+function checkDay(){
+  var t=today();if(t===lastToday)return;lastToday=t;cal.cur=t;calcRoll();replan();persist();render();
+}
+function calcRoll(){
+  if(S.snap&&S.snap.date<today()&&S.snap.pending>0)
+    rollNote='El '+shortDate(S.snap.date)+' quedaron '+S.snap.pending+' tareas sin marcar (≈'+fmtMin(S.snap.mins)+'). Ya están replanificadas en los próximos huecos.';
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkDay();});
+window.addEventListener('focus',checkDay);
+
+/* ====== Arranque ====== */
+try{
+  loadSync();if(sync.clientId)injectGIS(null,true);
+  S=load();
+  if(!S.seed){seedTemario();S.seed=1;S.updated=new Date().toISOString();}
+  if(!S.seed2){seedFechas();S.seed2=1;S.updated=new Date().toISOString();}
+calcRoll();replan();persist();render();
+}catch(err){
+  document.getElementById('app').innerHTML='<div class="banner bad">Error al iniciar: '+esc(err&&err.message)+'</div>';
+}
+})();
+</script>
+</body>
+</html>
