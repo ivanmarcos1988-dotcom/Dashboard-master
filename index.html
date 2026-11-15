@@ -532,6 +532,44 @@
     text-decoration: line-through;
     color: var(--text-muted);
   }
+  /* Estado: entregada pendiente de nota */
+  .tarea-item.entregada-pendiente {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b !important;
+  }
+  /* Estado: pendiente de modificaciones */
+  .tarea-item.pendiente-modificaciones {
+    background: #fff7ed;
+    border-left: 3px solid #ea580c !important;
+  }
+  @media (prefers-color-scheme: dark) {
+    .tarea-item.entregada-pendiente { background: #1c1810; }
+    .tarea-item.pendiente-modificaciones { background: #1c1208; }
+  }
+  .tarea-entregada-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 99px;
+    padding: 0.15rem 0.55rem;
+  }
+  .tarea-modif-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #7c2d12;
+    background: #ffedd5;
+    border: 1px solid #fed7aa;
+    border-radius: 99px;
+    padding: 0.15rem 0.55rem;
+  }
   /* Flash animation when task is just completed */
   @keyframes completedFlash {
     0%   { background: var(--alert-green-bg); border-color: var(--alert-green-border); transform: scale(1.01); }
@@ -1003,6 +1041,7 @@
   }
   .toast.success { background: var(--green-dark); }
   .toast.error { background: #dc2626; }
+  .toast.info { background: #b45309; }
   @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
@@ -1967,6 +2006,7 @@ mark.hl{background:#fde68a;color:var(--ink);border-radius:2px;padding:0 1px}
     <div class="section-header mb-2">
       <div class="section-title">✔️ Todas las Tareas</div>
       <span id="tareas-count" class="chip chip-gray"></span>
+      <button class="btn btn-ghost btn-sm" id="btn-vista-tablero" onclick="toggleVistaTablero()" style="font-size:0.78rem">🗂️ Tablero</button>
     </div>
     <!-- Filtros -->
     <div class="card mb-2" style="padding:1rem 1.5rem">
@@ -2017,6 +2057,7 @@ mark.hl{background:#fde68a;color:var(--ink);border-radius:2px;padding:0 1px}
         <button class="btn btn-ghost btn-sm" onclick="resetFiltros()">↺ Limpiar</button>
       </div>
     </div>
+    <div id="tareas-kanban" style="display:none"></div>
     <div id="tareas-global-list"></div>
   </div>
 
@@ -2057,10 +2098,15 @@ mark.hl{background:#fde68a;color:var(--ink);border-radius:2px;padding:0 1px}
     </div>
     <!-- Stats summary -->
     <div id="historial-stats-row"></div>
-    <!-- Table -->
-    <div class="card" style="overflow:hidden;padding:0">
+    <!-- Table: entregas definitivas -->
+    <div class="card" style="overflow:hidden;padding:0;margin-bottom:1.2rem">
       <div id="historial-table-wrap" style="overflow-x:auto"></div>
     </div>
+    <!-- Per-asignatura activity breakdown -->
+    <div class="section-header mb-2" style="margin-top:0.5rem">
+      <div class="section-title" style="font-size:1rem">📂 Todas las entregas por asignatura y actividad</div>
+    </div>
+    <div id="historial-por-asig"></div>
   </div>
 
 
@@ -3000,17 +3046,52 @@ mark.hl{background:#fde68a;color:var(--ink);border-radius:2px;padding:0 1px}
 <!-- ============================== -->
 <div class="modal-overlay" id="modal-completar-tarea">
   <div class="modal" style="max-width:400px">
-    <div class="modal-title">✅ Marcar como completada</div>
+    <div class="modal-title">📬 Registrar entrega</div>
     <input type="hidden" id="completar-asig-idx">
     <input type="hidden" id="completar-tarea-idx">
     <p class="text-sm text-muted mb-2" id="completar-tarea-nombre" style="font-style:italic;margin-bottom:1rem"></p>
     <div class="form-group">
-      <label class="form-label">Fecha de realización</label>
+      <label class="form-label">Fecha de entrega</label>
       <input class="form-input" id="completar-fecha" type="date">
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('modal-completar-tarea')">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmarCompletarTarea()">✅ Confirmar</button>
+      <button class="btn btn-primary" onclick="confirmarCompletarTarea()">📬 Registrar entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Añadir nota a tarea entregada -->
+<div class="modal-overlay" id="modal-nota-tarea">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-title">🎓 Resultado de la entrega</div>
+    <input type="hidden" id="nota-asig-idx">
+    <input type="hidden" id="nota-tarea-idx">
+    <p class="text-sm text-muted" id="nota-tarea-nombre" style="font-style:italic;margin-bottom:1rem"></p>
+    <div class="form-group">
+      <label class="form-label">Nota obtenida <span id="nota-ponderacion-label" style="font-size:0.75rem;color:#6d28d9;font-weight:400"></span></label>
+      <input class="form-input" id="nota-valor" type="number" min="0" max="10" step="0.01" placeholder="Ej: 7.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Estado</label>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;flex:1;min-width:160px;background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;transition:all 0.15s" id="nota-estado-aprobada-label">
+          <input type="radio" name="nota-estado" id="nota-estado-aprobada" value="aprobada" checked onchange="toggleNotaEstado()">
+          <span>✅ Aprobada — nota final</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;flex:1;min-width:160px;background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius-sm);padding:0.6rem 0.8rem;transition:all 0.15s" id="nota-estado-modif-label">
+          <input type="radio" name="nota-estado" id="nota-estado-modif" value="modificaciones" onchange="toggleNotaEstado()">
+          <span>🔧 Pendiente de modificaciones</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group" id="nota-proxima-entrega-group" style="display:none">
+      <label class="form-label">Fecha límite para las modificaciones</label>
+      <input class="form-input" id="nota-proxima-entrega" type="date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-nota-tarea')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarNota()">💾 Guardar resultado</button>
     </div>
   </div>
 </div>
@@ -3133,6 +3214,8 @@ function save() {
   localStorage.setItem('master_actividades', JSON.stringify(actividades));
   localStorage.setItem('master_objetivos', JSON.stringify(objetivos));
   localStorage.setItem('master_name', masterName);
+  // Mantener lista y tablero de Tareas al día con cualquier cambio de estado
+  try { if (document.getElementById('tab-tareas')?.classList.contains('active')) renderTareasFiltros(); } catch(e) {}
 }
 
 // ── Backup embebido del 2026-10-18 (exportado desde móvil) ──────────────────
@@ -3193,6 +3276,23 @@ function load() {
   try { emailConfig = JSON.parse(localStorage.getItem('master_email_config')) || {}; } catch(e){ emailConfig={}; }
   try { alertHistory = JSON.parse(localStorage.getItem('master_alert_history')) || {}; } catch(e){ alertHistory={}; }
   masterName = localStorage.getItem('master_name') || 'Mi Máster';
+
+  // Recalcular notas de asignaturas desde tareas al arrancar
+  // (corrige valores obsoletos guardados en localStorage)
+  asignaturas.forEach(a => {
+    const tareasConNota = (a.tareas||[]).filter(t=>t.nota!==null&&t.nota!==''&&!isNaN(parseFloat(t.nota)));
+    if (tareasConNota.length > 0) {
+      // Hay tareas con nota → recalcular siempre (ignora cualquier valor manual antiguo)
+      const conPond = tareasConNota.filter(t=>t.ponderacion!=null&&t.ponderacion!=='');
+      if (conPond.length) {
+        a.nota = parseFloat((conPond.reduce((s,t)=>s+(parseFloat(t.nota)*parseFloat(t.ponderacion)/100),0)).toFixed(2));
+      } else {
+        const notas = tareasConNota.map(t=>parseFloat(t.nota));
+        a.nota = parseFloat((notas.reduce((s,n)=>s+n,0)/notas.length).toFixed(2));
+      }
+    }
+    // Sin tareas con nota → respetamos lo que haya (nota manual o null)
+  });
 }
 
 function saveEmailConfigData() {
@@ -4746,7 +4846,12 @@ function getAlertLevel(days) {
   return null;
 }
 
-function alertConfig(level) {
+// Tarea ya entregada (a la espera de nota), no completada ni pendiente de modificaciones
+function tareaEntregada(t) {
+  return !!(t && t.entregada && !t.completada && !t.pendienteModificaciones);
+}
+function alertConfig(level, days) {
+  if (level === 'critical' && days === 0) return { cls:'alert-red', icon:'🔴', badge:'HOY', msg:'Entrega hoy' };
   switch(level) {
     case 'overdue':  return { cls:'alert-red',    icon:'🔴', badge:'VENCIDA',         msg:'Entrega vencida' };
     case 'critical': return { cls:'alert-red',    icon:'🔴', badge:'1 DÍA',           msg:'Entrega mañana' };
@@ -4779,7 +4884,7 @@ function renderPanelHoy() {
   // Tareas críticas (≤1 día) e importantes (≤3 días)
   asignaturas.filter(a => !a.archivada).forEach(a => {
     (a.tareas||[]).forEach(t => {
-      if (t.completada) return;
+      if (t.completada || tareaEntregada(t)) return;
       if (!t.fechaLimite) return;
       const days = getDaysRemaining(t.fechaLimite);
       const level = getAlertLevel(days);
@@ -4804,7 +4909,7 @@ function renderPanelHoy() {
 
   if (items.entregas.length) {
     html += items.entregas.map(e => {
-      const cfg = alertConfig(e.level);
+      const cfg = alertConfig(e.level, e.days);
       const label = e.days < 0
         ? `Vencida hace ${Math.abs(e.days)}d`
         : e.days === 0 ? 'Vence hoy' : `${e.days} día${e.days !== 1 ? 's' : ''}`;
@@ -5207,7 +5312,7 @@ function generarInforme() {
   const entregas = [];
   asignaturas.forEach(a => {
     (a.tareas||[]).filter(t => !t.completada && t.fechaLimite).forEach(t => {
-      entregas.push({ asig: a.nombre, nombre: t.texto, fecha: t.fechaLimite, ponder: t.ponderacion||'?', dias: daysDiff(t.fechaLimite) });
+      entregas.push({ asig: a.nombre, nombre: t.texto, fecha: t.fechaLimite, ponder: t.ponderacion||'?', dias: daysDiff(t.fechaLimite), entregada: tareaEntregada(t) });
     });
   });
   entregas.sort((a,b) => a.fecha.localeCompare(b.fecha));
@@ -5297,8 +5402,9 @@ function generarInforme() {
   </div>
   ${pendientes.length > 0 ? `<div style="margin-top:0.7rem;font-size:0.8rem;color:#64748b">Próximas entregas: ${pendientes.map(t=>{
     const d=daysDiff(t.fechaLimite);
-    const cls=d===null?'chip-gray':d<0?'chip-red':d<=3?'chip-amber':'chip-green';
-    return `<span class="chip ${cls}" style="margin-right:0.3rem">${esc(t.texto)} (${fmtDate(t.fechaLimite)})</span>`;
+    const ent=tareaEntregada(t);
+    const cls=ent?'chip-green':d===null?'chip-gray':d<0?'chip-red':d<=3?'chip-amber':'chip-green';
+    return `<span class="chip ${cls}" style="margin-right:0.3rem">${ent?'📬 ':''}${esc(t.texto)} (${fmtDate(t.fechaLimite)})${ent?' · entregada':''}</span>`;
   }).join('')}</div>` : ''}
 </div>`;
   });
@@ -5312,8 +5418,8 @@ function generarInforme() {
     entregas.forEach(e => {
       const d = e.dias;
       const cls = d===null?'chip-gray':d<0?'chip-red':d<=3?'chip-amber':'chip-green';
-      const diasLabel = d===null?'—':d<0?`Vencida (${Math.abs(d)}d)`:d===0?'Hoy':`${d} días`;
-      html += `<tr><td>${esc(e.asig)}</td><td>${esc(e.nombre)}</td><td>${fmtDate(e.fecha)}</td><td><span class="chip ${cls}">${diasLabel}</span></td><td>${e.ponder}%</td></tr>`;
+      const diasLabel = e.entregada?'📬 Entregada':d===null?'—':d<0?`Vencida (${Math.abs(d)}d)`:d===0?'Hoy':`${d} días`;
+      html += `<tr><td>${esc(e.asig)}</td><td>${esc(e.nombre)}</td><td>${fmtDate(e.fecha)}</td><td><span class="chip ${e.entregada?'chip-green':cls}">${diasLabel}</span></td><td>${e.ponder}%</td></tr>`;
     });
     html += `</tbody></table>`;
   }
@@ -10881,7 +10987,7 @@ function renderNotificaciones(){
   // Tareas vencidas o próximas (≤3 días)
   (asignaturas||[]).forEach(a=>{
     (a.tareas||[]).forEach(t=>{
-      if(t.completada) return;
+      if(t.completada || tareaEntregada(t)) return;
       const d=getDaysRemaining(t.fechaLimite);
       if(d===null) return;
       if(d<0) alertas.push({nivel:'error',icon:'🚨',texto:`Tarea vencida: <b>${escH(t.texto)}</b>`,sub:a.nombre,dias:d});
@@ -11100,7 +11206,7 @@ function renderStats() {
       if (!t.completada) {
         pendientes++;
         const days = getDaysRemaining(t.fechaLimite);
-        if (days !== null && days <= 7 && days >= 0) proximas++;
+        if (!tareaEntregada(t) && days !== null && days <= 7 && days >= 0) proximas++;
       }
     });
   });
@@ -11141,19 +11247,40 @@ function calcGlobalProgress() {
 }
 
 function calcMedia(a) {
-  const notas = (a.tareas||[]).filter(t=>t.nota!==null && t.nota!=='').map(t=>parseFloat(t.nota));
-  if (!notas.length) return a.nota !== null && a.nota !== '' ? parseFloat(a.nota) : null;
+  const tareasConNota = (a.tareas||[]).filter(t=>t.nota!==null && t.nota!==''&&!isNaN(parseFloat(t.nota)));
+  if (!tareasConNota.length) return null;
+  // Si alguna tarea tiene ponderación, dividimos siempre entre 100
+  // (la ponderación es % sobre la nota final, independientemente de cuántas haya entregado)
+  const conPonderacion = tareasConNota.filter(t=>t.ponderacion!=null&&t.ponderacion!=='');
+  if (conPonderacion.length) {
+    const notaPond = conPonderacion.reduce((s,t)=>s+(parseFloat(t.nota)*parseFloat(t.ponderacion)/100),0);
+    return parseFloat(notaPond.toFixed(2));
+  }
+  // Sin ponderación: media simple
+  const notas = tareasConNota.map(t=>parseFloat(t.nota));
   return parseFloat((notas.reduce((s,n)=>s+n,0)/notas.length).toFixed(2));
 }
 
-// Recalcula y persiste asignatura.nota como media de las notas de sus tareas
+// Recalcula y persiste asignatura.nota como media ponderada de las notas de sus tareas
 function recalcNotaAsig(asigIdx) {
   const a = asignaturas[asigIdx];
-  const notas = (a.tareas||[]).filter(t=>t.nota!==null && t.nota!=='').map(t=>parseFloat(t.nota));
-  if (notas.length) {
+  const tareasConNota = (a.tareas||[]).filter(t=>t.nota!==null&&t.nota!==''&&!isNaN(parseFloat(t.nota)));
+  if (!tareasConNota.length) {
+    // Sin tareas con nota → limpiar la nota automática de la asignatura
+    // Solo si no tiene nota manual preexistente (sin tareas) — la limpiamos siempre
+    // porque fue calculada automáticamente
+    a.nota = null;
+    return;
+  }
+  const conPonderacion = tareasConNota.filter(t=>t.ponderacion!=null&&t.ponderacion!=='');
+  if (conPonderacion.length) {
+    // Nota ponderada: suma(nota × ponderacion / 100) — dividimos entre 100, no entre lo entregado
+    const notaPond = conPonderacion.reduce((s,t)=>s+(parseFloat(t.nota)*parseFloat(t.ponderacion)/100),0);
+    a.nota = parseFloat(notaPond.toFixed(2));
+  } else {
+    const notas = tareasConNota.map(t=>parseFloat(t.nota));
     a.nota = parseFloat((notas.reduce((s,n)=>s+n,0)/notas.length).toFixed(2));
   }
-  // Si no hay tareas con nota se respeta la nota manual existente
 }
 
 function renderAsigStatus() {
@@ -11560,12 +11687,13 @@ function renderObjetivos() {
 function renderProximasEntregas() {
   const el = document.getElementById('proximas-entregas');
   let items = [];
-  asignaturas.forEach(a => {
-    (a.tareas||[]).forEach(t => {
+  asignaturas.forEach((a, ai) => {
+    (a.tareas||[]).forEach((t, ti) => {
       if (t.completada || !t.fechaLimite) return;
       const days = getDaysRemaining(t.fechaLimite);
       if (days === null) return;
-      items.push({ asig: a.nombre, tarea: t.texto, fechaLimite: t.fechaLimite, days, url: t.url || null });
+      if (tareaEntregada(t) && days < 0 && t.nota != null && t.nota !== '') return; // entregada, fuera de plazo y ya con nota: no se muestra
+      items.push({ asig: a.nombre, tarea: t.texto, fechaLimite: t.fechaLimite, days, url: t.url || null, ai, ti, entregada: tareaEntregada(t), fechaEntrega: t.fechaEntrega || null });
     });
   });
   // Tareas del TFM con fecha límite
@@ -11578,18 +11706,28 @@ function renderProximasEntregas() {
       items.push({ asig: '📝 TFM', tarea: t.titulo, fechaLimite: t.fecha, days, url: null });
     });
   } catch(e) {}
-  items.sort((a,b) => a.days - b.days);
+  items.sort((a,b) => (a.entregada?1:0)-(b.entregada?1:0) || a.days - b.days);
   if (!items.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><div class="empty-state-text">Sin entregas pendientes</div></div>';
     return;
   }
   // Mostrar siempre las 2 más próximas, con estilo de alerta si aplica o neutro si están lejos
-  const visibles = items.slice(0, 2);
+  const visibles = [...items.filter(i => !i.entregada).slice(0, 2), ...items.filter(i => i.entregada).slice(0, 4)];
   el.innerHTML = visibles.map(item => {
-    const level = getAlertLevel(item.days);
-    const cfg = level ? alertConfig(level) : null;
+    const level = item.entregada ? null : getAlertLevel(item.days);
+    const cfg = level ? alertConfig(level, item.days) : null;
     const daysText = item.days < 0 ? `Hace ${Math.abs(item.days)} día(s)` : item.days === 0 ? 'Hoy' : `En ${item.days} día(s)`;
     const urlBtn = item.url ? `<button style="margin-left:0.5rem;font-size:0.72rem;color:var(--green-sage);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;white-space:nowrap" onclick="event.stopPropagation();copyToClipboard('${item.url}')">📁 Copiar enlace</button>` : '';
+    if (item.entregada) {
+      return `<div class="alert" style="background:var(--bg);border-color:var(--border);border-left:4px solid var(--green-sage)">
+        <div class="alert-icon">📬</div>
+        <div class="alert-content">
+          <div class="alert-title">${item.tarea}${urlBtn}</div>
+          <div class="alert-desc">${item.asig} · Límite: ${formatDate(item.fechaLimite)}${item.fechaEntrega ? ' · Entregada: '+formatDate(item.fechaEntrega) : ''} · <b>Sin nota</b></div>
+        </div>
+        <button class="btn btn-primary" style="white-space:nowrap;font-size:0.78rem;padding:0.35rem 0.7rem" onclick="event.stopPropagation();abrirModalNota(${item.ai},${item.ti})">✏️ Poner nota</button>
+      </div>`;
+    }
     if (cfg) {
       return `<div class="alert ${cfg.cls}">
         <div class="alert-icon">${cfg.icon}</div>
@@ -11655,7 +11793,7 @@ function renderProximasActividades() {
     if (item.tipo === 'actividad') {
       const a = item.data;
       const level = getAlertLevel(item.days);
-      const cfg = level ? alertConfig(level) : null;
+      const cfg = level ? alertConfig(level, item.days) : null;
       return `<div class="alert ${cfg ? cfg.cls : ''}" style="${!cfg ? 'background:var(--bg);border-color:var(--border);color:var(--text-primary);border-left:4px solid var(--green-sage)' : ''}">
         <div class="alert-icon">${cfg ? cfg.icon : '📅'}</div>
         <div class="alert-content">
@@ -11918,7 +12056,7 @@ function archivarAsig(i) {
 function renderAsigCard(a, i) {
   const pct = calcProgress(a);
   const media = calcMedia(a);
-  const pendientes = (a.tareas||[]).filter(t=>!t.completada).length;
+  const pendientes = (a.tareas||[]).filter(t=>!t.completada&&!t.entregada).length;
 
   const horariosHTML = (a.horarios||[]).length
     ? [...(a.horarios||[])].map((h,hi)=>({...h,_hi:hi}))
@@ -11956,40 +12094,79 @@ function renderAsigCard(a, i) {
   const tareasHTML = (a.tareas||[]).length
     ? (a.tareas||[]).map((t,ti) => {
         const days = getDaysRemaining(t.fechaLimite);
-        const level = !t.completada ? getAlertLevel(days) : null;
-        const cfg = level ? alertConfig(level) : null;
+        const level = (!t.completada && !tareaEntregada(t)) ? getAlertLevel(days) : null;
+        const cfg = level ? alertConfig(level, days) : null;
         const borderStyle = cfg ? `border-left:3px solid ${level==='overdue'||level==='critical'?'var(--alert-red-border)':level==='important'?'var(--alert-orange-border)':'var(--alert-blue-border)'}` : '';
         const rbBadge = rbRefsBadge('asig:'+i+':'+ti);
-        // Fecha de entrega: mostrar siempre si existe, con badge especial si está completada
-        const entregaHTML = t.fechaEntrega
-          ? `<span class="tarea-entrega-badge">✓ Entregada: ${formatDate(t.fechaEntrega)}</span>`
+        // Estado entrega/nota
+        const estaEntregada = t.entregada || t.completada;
+        const pendienteNota = t.pendienteNota && !t.completada && !t.pendienteModificaciones;
+        const pendienteModif = !!t.pendienteModificaciones && !t.completada;
+        // Badge según estado
+        let entregaHTML = '';
+        if (t.completada && t.fechaEntrega) {
+          entregaHTML = `<span class="tarea-entrega-badge">✓ Entregada: ${formatDate(t.fechaEntrega)}</span>`;
+        } else if (pendienteNota) {
+          entregaHTML = `<span class="tarea-entregada-badge">📬 Entregada ${t.fechaEntrega?formatDate(t.fechaEntrega):''} · <em>pendiente de nota</em></span>`;
+        } else if (pendienteModif) {
+          const proxFecha = t.proximaEntrega ? ` · Próxima entrega: ${formatDate(t.proximaEntrega)}` : '';
+          const notaProv  = t.notaProvisional != null ? ` (nota provisional: ${t.notaProvisional}/10)` : '';
+          entregaHTML = `<span class="tarea-modif-badge">🔧 Pendiente de modificaciones${notaProv}${proxFecha}</span>`;
+        }
+        // Historial de reaperturas (cambio de fecha límite)
+        const historialReapHTML = (t.historialReaperturas||[]).length
+          ? (t.historialReaperturas).map(h =>
+              ({ ts: h.fecha||'', html: `<div class="historial-entry"><span class="historial-entry-dot">↩</span>${formatDate(h.fecha)} · ${h.motivo}${h.fechaEntregaAnterior ? ` <span style="opacity:0.7">(entrega anterior: ${formatDate(h.fechaEntregaAnterior)})</span>` : ''}</div>` })
+            )
+          : [];
+        // Historial de entregas (primera entrega + re-entregas)
+        const histEntregasItems = (t.historialEntregas||[]).map(e => ({
+          ts: e.ts || e.fecha || '',
+          html: `<div class="historial-entry"><span class="historial-entry-dot">${e.tipo==='reentrega'?'📬':'📤'}</span>${formatDate(e.fecha)} · ${e.tipo==='reentrega'?'Re-entrega registrada':'Entrega registrada'}</div>`
+        }));
+        // Historial de notas (evaluaciones)
+        const histNotasItems = (t.historialNotas||[]).map(n => ({
+          ts: n.ts || n.fecha || '',
+          html: `<div class="historial-entry"><span class="historial-entry-dot">📋</span>${formatDate(n.fecha)} · ${n.nota}/10 · ${n.estado==='modificaciones'?'🔧 Pendiente de modificaciones':'✅ Aprobada'}</div>`
+        }));
+        // Merge y ordenar cronológicamente
+        const allHistItems = [...histEntregasItems, ...histNotasItems, ...historialReapHTML]
+          .sort((a,b) => (a.ts||'').localeCompare(b.ts||''));
+        const historialHTML = allHistItems.length
+          ? `<div class="historial-list">${allHistItems.map(x=>x.html).join('')}</div>`
           : '';
-        // Historial de reaperturas
-        const historialHTML = (t.historialReaperturas||[]).length
-          ? `<div class="historial-list">${(t.historialReaperturas).map(h =>
-              `<div class="historial-entry"><span class="historial-entry-dot">↩</span>${formatDate(h.fecha)} · ${h.motivo}${h.fechaEntregaAnterior ? ` <span style="opacity:0.7">(entrega anterior: ${formatDate(h.fechaEntregaAnterior)})</span>` : ''}</div>`
-            ).join('')}</div>`
-          : '';
-        return `<div class="tarea-item ${t.completada?'completada':''}" style="${borderStyle}">
+        const histNotasHTML = ''; // fusionado arriba
+        // Clases CSS según estado
+        const tareaClase = t.completada ? 'completada' : (pendienteNota ? 'entregada-pendiente' : (pendienteModif ? 'pendiente-modificaciones' : ''));
+        // Icono prefijo texto
+        const prefijo = t.completada ? '✅ ' : (pendienteNota ? '📬 ' : (pendienteModif ? '🔧 ' : ''));
+        // Días: si pendienteModif, mostrar días para próxima entrega
+        const diasModif = pendienteModif && t.proximaEntrega ? getDaysRemaining(t.proximaEntrega) : null;
+        return `<div class="tarea-item ${tareaClase}" style="${borderStyle}">
           <div class="tarea-check ${t.completada?'checked':''}" onclick="toggleTarea(${i},${ti})" title="${t.completada?'Desmarcar':'Marcar como completada'}"></div>
           <div class="tarea-info" style="flex:1">
-            <div class="tarea-texto">${t.completada ? '✅ ' : ''}${t.texto}</div>
+            <div class="tarea-texto">${prefijo}${t.texto}</div>
             <div class="tarea-meta" style="display:flex;flex-wrap:wrap;gap:0.4rem;align-items:center;margin-top:0.25rem">
-              ${t.fechaLimite?`<span>📅 Límite: ${formatDate(t.fechaLimite)}${t.horaLimite?' '+t.horaLimite:''}</span>`:''}
-              ${days!==null&&!t.completada?`<span>${days<0?'<span style="color:var(--alert-red-text);font-weight:600">⚠ Vencida</span>':days===0?'<span style="color:var(--alert-red-text);font-weight:600">⚠ Vence hoy</span>':`${days}d restantes`}</span>`:''}
-              ${cfg&&!t.completada?`<span style="font-weight:600">${cfg.icon} ${cfg.msg}</span>`:''}
+              ${t.fechaLimite&&!estaEntregada?`<span>📅 Límite: ${formatDate(t.fechaLimite)}${t.horaLimite?' '+t.horaLimite:''}</span>`:''}
+              ${days!==null&&!estaEntregada?`<span>${days<0?'<span style="color:var(--alert-red-text);font-weight:600">⚠ Vencida</span>':days===0?'<span style="color:var(--alert-red-text);font-weight:600">⚠ Vence hoy</span>':`${days}d restantes`}</span>`:''}
+              ${cfg&&!estaEntregada?`<span style="font-weight:600">${cfg.icon} ${cfg.msg}</span>`:''}
+              ${diasModif!==null?`<span>${diasModif<0?'<span style="color:var(--alert-red-text);font-weight:600">⚠ Plazo vencido</span>':diasModif===0?'<span style="color:var(--alert-red-text);font-weight:600">⚠ Entrega hoy</span>':`<span style="color:#b45309;font-weight:600">${diasModif}d para entregar modificaciones</span>`}</span>`:''}
               ${t.ponderacion!=null?`<span style="background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;border-radius:99px;padding:0.1rem 0.45rem;font-size:0.7rem;font-weight:600">⚖️ ${t.ponderacion}%</span>`:''}
               ${(t.etiquetas||[]).length ? renderEtiquetasChips(t.etiquetas) : ''}
-              ${t.completada && entregaHTML ? entregaHTML : ''}
+              ${entregaHTML}
               ${rbBadge}
             </div>
             ${historialHTML}
+            ${histNotasHTML}
             ${(t.enlaces||[]).length ? `<div class="tarea-enlaces">${(t.enlaces).map(e=>`<a href="${e.url}" target="_blank" rel="noopener" class="tarea-enlace-btn">${getEnlaceIcon(e.url)} ${e.label}</a>`).join('')}</div>` : ''}
             ${renderSubtareasInline(t, i, ti)}
           </div>
-          ${t.nota!==null&&t.nota!==''?`<span class="tarea-nota">${t.nota}/10</span>`:''}
+          ${t.nota!==null&&t.nota!==''?`<span class="tarea-nota">${t.nota}/10</span>`:t.notaProvisional!=null?`<span class="tarea-nota" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">${t.notaProvisional}/10⚠</span>`:''}
           ${(t.pomodoroSesiones||[]).length ? `<span title="${t.pomodoroSesiones.length} pomodoro${t.pomodoroSesiones.length!==1?'s':''} · ${t.pomodoroSesiones.reduce((s,x)=>s+x.minutos,0)}min" style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap;flex-shrink:0;align-self:center">🍅×${t.pomodoroSesiones.length}</span>` : ''}
-          <div style="display:flex;gap:0.35rem;flex-shrink:0">
+          <div style="display:flex;gap:0.35rem;flex-shrink:0;align-items:center">
+            ${pendienteNota ? `<button class="btn btn-primary btn-sm" onclick="abrirModalNota(${i},${ti})" style="font-size:0.75rem;padding:0.25rem 0.6rem">🎓 Nota</button>` : ''}
+            ${pendienteModif ? `<button class="btn btn-secondary btn-sm" onclick="registrarReentrega(${i},${ti})" style="font-size:0.75rem;padding:0.25rem 0.6rem">📬 Re-entregar</button><button class="btn btn-ghost btn-sm" onclick="abrirModalNota(${i},${ti})" style="font-size:0.75rem;padding:0.25rem 0.6rem" title="Editar nota provisional">🎓</button>` : ''}
+            ${(pendienteNota||pendienteModif||t.entregada||t.completada) ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="anularEntregaTarea(${i},${ti})" title="Anular entrega — volver a pendiente" style="color:var(--text-muted);font-size:0.75rem">↩</button>` : ''}
             <button class="btn btn-ghost btn-sm btn-icon" onclick="openPomodoro(${i},${ti})" title="Pomodoro">🍅</button>
             <button class="btn btn-ghost btn-sm btn-icon" onclick="openTareaModal(${i},${ti})" title="Editar">✏️</button>
             <button class="btn btn-danger btn-sm btn-icon" onclick="deleteTarea(${i},${ti})" title="Eliminar">✕</button>
@@ -12512,6 +12689,18 @@ function toggleTarea(asigIdx, tareaIdx) {
     return;
   }
 
+  // Si pendiente de modificaciones → el checkbox abre el modal de re-entrega
+  if (tarea.pendienteModificaciones && !tarea.completada) {
+    registrarReentrega(asigIdx, tareaIdx);
+    return;
+  }
+
+  // Si ya está entregada pero pendiente de nota → abrir modal de nota
+  if (tarea.entregada && tarea.pendienteNota) {
+    abrirModalNota(asigIdx, tareaIdx);
+    return;
+  }
+
   // Check subtareas pendientes
   const subsPendientes = (tarea.subtareas||[]).filter(s => !s.completada);
   if (subsPendientes.length > 0) {
@@ -12529,31 +12718,167 @@ function toggleTarea(asigIdx, tareaIdx) {
 }
 
 function confirmarCompletarTarea() {
-  const asigIdx  = parseInt(document.getElementById('completar-asig-idx').value);
+  const hiddenEl = document.getElementById('completar-asig-idx');
+  const asigIdx  = parseInt(hiddenEl.value);
   const tareaIdx = parseInt(document.getElementById('completar-tarea-idx').value);
   const fecha    = document.getElementById('completar-fecha').value;
+  const esReentrega = hiddenEl.dataset.reentrega === '1';
   const tarea    = asignaturas[asigIdx].tareas[tareaIdx];
 
-  tarea.completada   = true;
-  tarea.fechaEntrega = fecha || new Date().toISOString().split('T')[0];
+  // Resetear título del modal por si era re-entrega
+  document.querySelector('#modal-completar-tarea .modal-title').textContent = '📬 Registrar entrega';
+  document.querySelector('#modal-completar-tarea .btn-primary').textContent = '📬 Registrar entrega';
+  delete hiddenEl.dataset.reentrega;
+
+  tarea.entregada               = true;
+  tarea.pendienteNota           = true;
+  tarea.pendienteModificaciones = false;
+  tarea.proximaEntrega          = null;
+  tarea.fechaEntrega            = fecha || new Date().toISOString().split('T')[0];
+  // Registrar en historial de entregas
+  if (!tarea.historialEntregas) tarea.historialEntregas = [];
+  tarea.historialEntregas.push({
+    fecha: tarea.fechaEntrega,
+    tipo: esReentrega ? 'reentrega' : 'entrega',
+    ts: new Date().toISOString(),
+  });
 
   closeModal('modal-completar-tarea');
   save();
   renderAsignaturas();
   renderStats();
 
+  const msg = esReentrega ? '📬 Re-entrega registrada — pendiente de nota' : '📬 Entrega registrada — pendiente de nota';
   setTimeout(() => {
     const body = document.getElementById('asig-body-' + asigIdx);
     if (body && !body.classList.contains('open')) toggleAsig(asigIdx);
-    const tareaEls = document.querySelectorAll(`#tareas-${asigIdx} .tarea-item`);
-    if (tareaEls[tareaIdx]) {
-      tareaEls[tareaIdx].classList.add('just-completed');
-      tareaEls[tareaIdx].addEventListener('animationend', () => {
-        tareaEls[tareaIdx].classList.remove('just-completed');
-      }, { once: true });
-    }
-    toast('¡Tarea completada! ✅', 'success');
+    toast(msg, 'info');
   }, 55);
+}
+
+function abrirModalNota(asigIdx, tareaIdx) {
+  const tarea = asignaturas[asigIdx].tareas[tareaIdx];
+  document.getElementById('nota-asig-idx').value = asigIdx;
+  document.getElementById('nota-tarea-idx').value = tareaIdx;
+  document.getElementById('nota-tarea-nombre').textContent = `"${tarea.texto}"`;
+  const pondLabel = document.getElementById('nota-ponderacion-label');
+  pondLabel.textContent = tarea.ponderacion != null ? `— pondera ${tarea.ponderacion}% en la nota final` : '';
+  // Si ya hay nota provisional (de un ciclo anterior de modificaciones), la rellenamos
+  document.getElementById('nota-valor').value = tarea.notaProvisional != null ? tarea.notaProvisional : (tarea.nota != null && tarea.nota !== '' ? tarea.nota : '');
+  // Reset radio a "aprobada" por defecto
+  document.getElementById('nota-estado-aprobada').checked = true;
+  document.getElementById('nota-proxima-entrega-group').style.display = 'none';
+  document.getElementById('nota-proxima-entrega').value = '';
+  // Resaltar la opción seleccionada
+  toggleNotaEstado();
+  openModal('modal-nota-tarea');
+}
+
+function toggleNotaEstado() {
+  const esModif = document.getElementById('nota-estado-modif').checked;
+  document.getElementById('nota-proxima-entrega-group').style.display = esModif ? 'block' : 'none';
+  // Resaltar borde del radio seleccionado
+  document.getElementById('nota-estado-aprobada-label').style.borderColor = !esModif ? 'var(--green-dark)' : 'var(--border)';
+  document.getElementById('nota-estado-modif-label').style.borderColor = esModif ? '#f59e0b' : 'var(--border)';
+}
+
+function confirmarNota() {
+  const asigIdx  = parseInt(document.getElementById('nota-asig-idx').value);
+  const tareaIdx = parseInt(document.getElementById('nota-tarea-idx').value);
+  const notaVal  = document.getElementById('nota-valor').value;
+  if (notaVal === '' || isNaN(parseFloat(notaVal))) {
+    toast('⚠️ Introduce una nota válida (0–10)', 'error');
+    return;
+  }
+  const nota = Math.min(10, Math.max(0, parseFloat(notaVal)));
+  const esModif = document.getElementById('nota-estado-modif').checked;
+  const tarea = asignaturas[asigIdx].tareas[tareaIdx];
+
+  if (esModif) {
+    // Estado: pendiente de modificaciones — no es nota final
+    const proximaFecha = document.getElementById('nota-proxima-entrega').value;
+    tarea.notaProvisional      = nota;       // nota provisional (puede cambiar)
+    tarea.pendienteModificaciones = true;
+    tarea.proximaEntrega       = proximaFecha || null;
+    tarea.completada           = false;
+    tarea.pendienteNota        = false;
+    tarea.entregada            = true;
+    // Guardamos historial de esta evaluación
+    if (!tarea.historialNotas) tarea.historialNotas = [];
+    tarea.historialNotas.push({
+      fecha: new Date().toISOString().split('T')[0],
+      ts: new Date().toISOString(),
+      nota,
+      estado: 'modificaciones',
+      fechaEntrega: tarea.fechaEntrega || null,
+    });
+    closeModal('modal-nota-tarea');
+    save();
+    renderAsignaturas();
+    renderStats();
+    try { renderProximasEntregas(); } catch(e) {}
+    setTimeout(() => toast('🔧 Pendiente de modificaciones — nota provisional: ' + nota + '/10', 'info'), 55);
+  } else {
+    // Aprobada — nota final
+    if (!tarea.historialNotas) tarea.historialNotas = [];
+    tarea.historialNotas.push({
+      fecha: new Date().toISOString().split('T')[0],
+      ts: new Date().toISOString(),
+      nota,
+      estado: 'aprobada',
+      fechaEntrega: tarea.fechaEntrega || null,
+    });
+    tarea.nota                    = nota;
+    tarea.completada              = true;
+    tarea.pendienteNota           = false;
+    tarea.pendienteModificaciones = false;
+    tarea.notaProvisional         = null;
+    tarea.proximaEntrega          = null;
+    recalcNotaAsig(asigIdx);
+    closeModal('modal-nota-tarea');
+    save();
+    renderAsignaturas();
+    renderStats();
+    try { renderProximasEntregas(); } catch(e) {}
+    setTimeout(() => toast(`✅ Aprobada — nota final: ${nota}/10`, 'success'), 55);
+  }
+}
+
+// Anular entrega — resetea la tarea a estado pendiente sin historial de notas
+function anularEntregaTarea(asigIdx, tareaIdx) {
+  const tarea = asignaturas[asigIdx].tareas[tareaIdx];
+  tarea.entregada               = false;
+  tarea.pendienteNota           = false;
+  tarea.pendienteModificaciones = false;
+  tarea.proximaEntrega          = null;
+  tarea.notaProvisional         = null;
+  tarea.historialNotas          = [];
+  tarea.historialEntregas       = [];
+  tarea.fechaEntrega            = '';
+  tarea.nota                    = null;
+  tarea.completada              = false;
+  // Recalcular nota de la asignatura (puede quedar a null si era la única con nota)
+  recalcNotaAsig(asigIdx);
+  save();
+  renderAsignaturas();
+  renderStats();
+  toast('↩ Entrega anulada — tarea vuelve a pendiente', '');
+}
+
+// Registrar re-entrega de modificaciones → vuelve a estado "pendiente de nota"
+function registrarReentrega(asigIdx, tareaIdx) {
+  const tarea = asignaturas[asigIdx].tareas[tareaIdx];
+  // Reutilizamos el modal de entrega, pero lo adaptamos para re-entrega
+  document.getElementById('completar-asig-idx').value = asigIdx;
+  document.getElementById('completar-tarea-idx').value = tareaIdx;
+  document.getElementById('completar-tarea-nombre').textContent = `"${tarea.texto}" (re-entrega de modificaciones)`;
+  document.getElementById('completar-fecha').value = new Date().toISOString().split('T')[0];
+  // Marcamos que esto es una re-entrega
+  document.querySelector('#modal-completar-tarea .modal-title').textContent = '📬 Registrar re-entrega';
+  document.querySelector('#modal-completar-tarea .btn-primary').textContent = '📬 Registrar re-entrega';
+  // Usamos un flag temporal en el form
+  document.getElementById('completar-asig-idx').dataset.reentrega = '1';
+  openModal('modal-completar-tarea');
 }
 
 function toggleReaperturaOtro() {
@@ -12578,9 +12903,15 @@ function confirmarReapertura() {
     motivo,
   });
 
-  // Clear state
-  tarea.completada = false;
-  tarea.fechaEntrega = '';
+  // Clear state completamente
+  tarea.completada              = false;
+  tarea.entregada               = false;
+  tarea.pendienteNota           = false;
+  tarea.pendienteModificaciones = false;
+  tarea.proximaEntrega          = null;
+  tarea.notaProvisional         = null;
+  tarea.fechaEntrega            = '';
+  tarea.nota                    = null;
 
   save();
   closeModal('modal-reapertura');
@@ -12615,7 +12946,7 @@ function renderActividades() {
   el.innerHTML = sorted.map(a => {
     const days = getDaysRemaining(a.fecha);
     const level = a.estado!=='cancelada' && !a.completada ? getAlertLevel(days) : null;
-    const cfg = level ? alertConfig(level) : null;
+    const cfg = level ? alertConfig(level, days) : null;
     return `<div class="actividad-card" style="${cfg?`border-left:3px solid ${level==='overdue'||level==='critical'?'var(--alert-red-border)':level==='important'?'var(--alert-orange-border)':'var(--alert-blue-border)'}`:''}" >
       <div class="actividad-estado-dot estado-${a.estado||'pendiente'}"></div>
       <div class="actividad-info">
@@ -12752,7 +13083,7 @@ function checkAlerts() {
 
   asignaturas.forEach((a, ai) => {
     (a.tareas||[]).forEach((t, ti) => {
-      if (t.completada) return;
+      if (t.completada || tareaEntregada(t)) return;
       const days = getDaysRemaining(t.fechaLimite);
       if (days === null) return;
       const level = getAlertLevel(days);
@@ -12761,12 +13092,12 @@ function checkAlerts() {
       const lastSent = alertHistory[key];
       if (lastSent === today) return;
       sendEmailAlert({
-        subject: `${getAlertEmoji(level)} ${getLevelLabel(level)} - ${a.nombre}`,
+        subject: `${getAlertEmoji(level)} ${getLevelLabel(level, days)} - ${a.nombre}`,
         asignatura: a.nombre,
         item: t.texto,
         fecha: formatDate(t.fechaLimite),
         dias: days < 0 ? `Vencida hace ${Math.abs(days)} día(s)` : `${days} día(s)`,
-        nivel: getLevelLabel(level),
+        nivel: getLevelLabel(level, days),
         tipo: 'Tarea'
       });
       alertHistory[key] = today;
@@ -12783,12 +13114,12 @@ function checkAlerts() {
     const lastSent = alertHistory[key];
     if (lastSent === today) return;
     sendEmailAlert({
-      subject: `${getAlertEmoji(level)} ${getLevelLabel(level)} - ${a.titulo}`,
+      subject: `${getAlertEmoji(level)} ${getLevelLabel(level, days)} - ${a.titulo}`,
       asignatura: a.tipo,
       item: a.titulo,
       fecha: formatDate(a.fecha),
       dias: days < 0 ? `Vencida hace ${Math.abs(days)} día(s)` : `${days} día(s)`,
-      nivel: getLevelLabel(level),
+      nivel: getLevelLabel(level, days),
       tipo: 'Actividad'
     });
     alertHistory[key] = today;
@@ -12800,7 +13131,8 @@ function checkAlerts() {
 function getAlertEmoji(level) {
   return { mild:'🔵', important:'🟠', critical:'🔴', overdue:'🔴' }[level] || '';
 }
-function getLevelLabel(level) {
+function getLevelLabel(level, days) {
+  if (level === 'critical' && days === 0) return 'Entrega hoy';
   return { mild:'Entrega próxima', important:'Entrega cercana', critical:'Entrega mañana', overdue:'Entrega vencida' }[level] || '';
 }
 
@@ -12867,7 +13199,7 @@ function getCalEvents() {
       add(h.dia, 'clase', a.nombre, h.horaInicio ? h.horaInicio + (h.horaFin ? '–'+h.horaFin : '') : '');
     });
     (a.tareas||[]).forEach(t => {
-      if (!t.completada && t.fechaLimite) add(t.fechaLimite, 'entrega', t.texto, '');
+      if (!t.completada && t.fechaLimite) add(t.fechaLimite, 'entrega', (tareaEntregada(t)?'📬 ':'')+t.texto+(tareaEntregada(t)?' (entregada)':''), '');
     });
   });
   actividades.forEach(a => {
@@ -13047,6 +13379,124 @@ function resetFiltros() {
   renderTareasFiltros();
 }
 
+// ===================================================
+//  TABLERO DE TAREAS (vista Kanban por estado)
+// ===================================================
+let vistaTablero = false;
+try { vistaTablero = localStorage.getItem('master_vista_tareas') === 'tablero'; } catch(e) {}
+
+const TAB_COLS = [
+  { id: 'pendiente',      titulo: 'Pendiente' },
+  { id: 'entregada',      titulo: 'Entregada · sin nota' },
+  { id: 'modificaciones', titulo: 'Con modificaciones' },
+  { id: 'completada',     titulo: 'Completada' }
+];
+
+// Estado de una tarea según sus campos reales (única fuente de verdad)
+function estadoTarea(t) {
+  if (t.completada) return 'completada';
+  if (t.pendienteModificaciones) return 'modificaciones';
+  if (t.entregada && t.pendienteNota) return 'entregada';
+  return 'pendiente';
+}
+
+function toggleVistaTablero() {
+  vistaTablero = !vistaTablero;
+  try { localStorage.setItem('master_vista_tareas', vistaTablero ? 'tablero' : 'lista'); } catch(e) {}
+  renderTareasFiltros();
+}
+
+// Registra la entrega con la fecha de hoy, sin pasar por el modal
+function registrarEntregaDirecta(ai, ti, tipo) {
+  const t = asignaturas[ai].tareas[ti];
+  const pendientes = (t.subtareas || []).filter(s => !s.completada);
+  if (pendientes.length) {
+    alert(`⚠️ Tienes ${pendientes.length} subtarea(s) pendiente(s). Complétalas primero.`);
+    return false;
+  }
+  const hoy = localDateStr(new Date());
+  t.entregada = true;
+  t.pendienteNota = true;
+  t.pendienteModificaciones = false;
+  t.proximaEntrega = null;
+  t.fechaEntrega = hoy;
+  if (!t.historialEntregas) t.historialEntregas = [];
+  t.historialEntregas.push({ fecha: hoy, tipo, ts: new Date().toISOString() });
+  save(); renderAsignaturas(); renderStats();
+  toast(tipo === 'reentrega' ? '📬 Re-entrega registrada — pendiente de nota' : '📬 Entrega registrada — pendiente de nota', 'info');
+  return true;
+}
+
+function _moverTareaInterno(ai, ti, destino) {
+  const t = asignaturas[ai].tareas[ti];
+  const actual = estadoTarea(t);
+  if (destino === actual) return;
+
+  if (destino === 'pendiente') {
+    if (!confirm('Esto anula la entrega y borra su historial de entregas. ¿Continuar?')) return;
+    anularEntregaTarea(ai, ti);
+    return;
+  }
+  if (destino === 'entregada') {
+    if (actual === 'pendiente') registrarEntregaDirecta(ai, ti, 'entrega');
+    else if (actual === 'modificaciones') registrarEntregaDirecta(ai, ti, 'reentrega');
+    else toggleTarea(ai, ti); // completada → modal de reapertura existente
+    return;
+  }
+  // Destinos que requieren nota: modificaciones o completada
+  if (actual === 'completada') { toggleTarea(ai, ti); return; } // reapertura primero
+  if (actual === 'pendiente' && !registrarEntregaDirecta(ai, ti, 'entrega')) return;
+  abrirModalNota(ai, ti);
+  if (destino === 'modificaciones') {
+    document.getElementById('nota-estado-modif').checked = true;
+    toggleNotaEstado();
+  }
+}
+
+function moverTarea(ai, ti, destino) {
+  _moverTareaInterno(ai, ti, destino);
+  renderTareasFiltros(); // restablece la tarjeta si se cancela un modal
+}
+
+function tarjetaTablero(a, ai, t, ti, estado) {
+  const days = getDaysRemaining(t.fechaLimite);
+  const vencida = estado !== 'completada' && days !== null && days < 0;
+  let plazo = 'Sin fecha';
+  if (t.fechaLimite) {
+    plazo = formatDate(t.fechaLimite);
+    if (estado !== 'completada' && days !== null) {
+      plazo += days < 0 ? ' · ⚠ vencida' : days === 0 ? ' · hoy' : ` · ${days}d`;
+    }
+  }
+  const nota = t.completada && t.nota != null && t.nota !== ''
+    ? ` · ✅ ${t.nota}/10`
+    : (t.notaProvisional != null ? ` · 🔧 ${t.notaProvisional}/10` : '');
+  const opts = TAB_COLS.map(c => `<option value="${c.id}" ${c.id === estado ? 'selected' : ''}>${c.titulo}</option>`).join('');
+  return `<div style="border:1px solid var(--border);border-left:4px solid ${a.color || '#4ade80'};border-radius:8px;padding:0.55rem 0.6rem;background:var(--surface);margin-bottom:0.5rem">
+    <div style="font-size:0.7rem;color:var(--text-muted)">${a.nombre}</div>
+    <div style="font-weight:600;font-size:0.84rem;margin:0.15rem 0">${t.texto}</div>
+    <div style="font-size:0.74rem;color:${vencida ? 'var(--alert-red-text)' : 'var(--text-secondary)'}">📅 ${plazo}${t.ponderacion != null ? ' · ⚖️ ' + t.ponderacion + '%' : ''}${nota}</div>
+    <select class="form-select" style="font-size:0.75rem;padding:0.2rem 0.4rem;margin-top:0.4rem;width:100%" onchange="moverTarea(${ai},${ti},this.value)">${opts}</select>
+  </div>`;
+}
+
+function renderTableroTareas() {
+  const el = document.getElementById('tareas-kanban');
+  if (!el) return;
+  el.innerHTML = `<div style="display:flex;gap:0.7rem;overflow-x:auto;align-items:flex-start;padding-bottom:0.5rem">` + TAB_COLS.map(col => {
+    const items = [];
+    asignaturas.forEach((a, ai) => {
+      if (filtros.asig !== 'todas' && ai != filtros.asig) return;
+      (a.tareas || []).forEach((t, ti) => { if (estadoTarea(t) === col.id) items.push({ a, ai, t, ti }); });
+    });
+    items.sort((x, y) => (x.t.fechaLimite || '9999').localeCompare(y.t.fechaLimite || '9999'));
+    return `<div style="flex:1;min-width:230px;background:var(--bg);border-radius:10px;padding:0.6rem">
+      <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem">${col.titulo} <span class="chip chip-gray">${items.length}</span></div>
+      ${items.map(x => tarjetaTablero(x.a, x.ai, x.t, x.ti, col.id)).join('') || '<div class="text-muted" style="font-size:0.78rem">Nada aquí</div>'}
+    </div>`;
+  }).join('') + `</div>`;
+}
+
 function renderTareasFiltros() {
   // Populate asig select
   const sel = document.getElementById('filter-asig');
@@ -13055,12 +13505,23 @@ function renderTareasFiltros() {
     asignaturas.map((a,i) => `<option value="${i}" ${filtros.asig==i?'selected':''}>${a.nombre}</option>`).join('');
   if (filtros.asig !== 'todas') sel.value = filtros.asig;
 
+  // Vista tablero: muestra columnas y oculta la lista
+  const kan = document.getElementById('tareas-kanban');
+  const lst = document.getElementById('tareas-global-list');
+  const btnV = document.getElementById('btn-vista-tablero');
+  if (kan && lst) {
+    kan.style.display = vistaTablero ? '' : 'none';
+    lst.style.display = vistaTablero ? 'none' : '';
+    if (btnV) btnV.textContent = vistaTablero ? '☰ Lista' : '🗂️ Tablero';
+    if (vistaTablero) { renderTableroTareas(); return; }
+  }
+
   // Collect all tasks
   let rows = [];
   asignaturas.forEach((a, ai) => {
     (a.tareas||[]).forEach((t, ti) => {
       const days = getDaysRemaining(t.fechaLimite);
-      const level = !t.completada ? getAlertLevel(days) : null;
+      const level = (!t.completada && !tareaEntregada(t)) ? getAlertLevel(days) : null;
       rows.push({ a, ai, t, ti, days, level });
     });
   });
@@ -13070,7 +13531,7 @@ function renderTareasFiltros() {
 
   if (filtros.estado === 'pendiente')  rows = rows.filter(r => !r.t.completada);
   if (filtros.estado === 'completada') rows = rows.filter(r => r.t.completada);
-  if (filtros.estado === 'vencida')    rows = rows.filter(r => !r.t.completada && r.days !== null && r.days < 0);
+  if (filtros.estado === 'vencida')    rows = rows.filter(r => !r.t.completada && !tareaEntregada(r.t) && r.days !== null && r.days < 0);
 
   if (filtros.urgencia !== 'todas') rows = rows.filter(r => r.level === filtros.urgencia);
   if (filtros.etiq !== 'todas') rows = rows.filter(r => (r.t.etiquetas||[]).includes(filtros.etiq));
@@ -13091,7 +13552,7 @@ function renderTareasFiltros() {
 
   // Completed always go last (regardless of other sort), unless filtering by "completada" only
   if (filtros.estado !== 'completada') {
-    rows.sort((a,b) => (a.t.completada ? 1 : 0) - (b.t.completada ? 1 : 0));
+    rows.sort((a,b) => (a.t.completada ? 2 : tareaEntregada(a.t) ? 1 : 0) - (b.t.completada ? 2 : tareaEntregada(b.t) ? 1 : 0));
   }
 
   // Update count
@@ -13104,19 +13565,21 @@ function renderTareasFiltros() {
   }
 
   el.innerHTML = rows.map(({ a, ai, t, ti, days, level }) => {
-    const cfg = level ? alertConfig(level) : null;
-    const borderStyle = cfg ? `border-left:3px solid ${level==='overdue'||level==='critical'?'var(--alert-red-border)':level==='important'?'var(--alert-orange-border)':'var(--alert-blue-border)'}` : '';
+    const cfg = level ? alertConfig(level, days) : null;
+    const entr = tareaEntregada(t);
+    const borderStyle = cfg ? `border-left:3px solid ${level==='overdue'||level==='critical'?'var(--alert-red-border)':level==='important'?'var(--alert-orange-border)':'var(--alert-blue-border)'}` : (entr ? 'border-left:3px solid var(--green-sage)' : '');
     const daysText = days === null ? '' : days < 0 ? `⚠ Vencida hace ${Math.abs(days)}d` : days === 0 ? '⚠ Vence hoy' : `${days}d restantes`;
 
     const rbBadgeGlobal = rbRefsBadge('asig:'+ai+':'+ti);
     return `<div class="tarea-global-row ${t.completada?'completada':''}" style="${borderStyle}">
       <span class="tg-asig">${a.nombre}</span>
       <div class="tg-info">
-        <div class="tg-texto">${t.completada?'✅ ':''}${t.texto}</div>
+        <div class="tg-texto">${t.completada?'✅ ':entr?'📬 ':''}${t.texto}</div>
         <div class="tg-meta">
           ${t.fechaLimite?`<span>📅 ${formatDate(t.fechaLimite)}</span>`:''}
-          ${daysText&&!t.completada?`<span style="color:${days<0||days===0?'var(--alert-red-text)':'inherit'};font-weight:500">${daysText}</span>`:''}
+          ${daysText&&!t.completada&&!entr?`<span style="color:${days<0||days===0?'var(--alert-red-text)':'inherit'};font-weight:500">${daysText}</span>`:''}
           ${cfg&&!t.completada?`<span style="font-weight:600">${cfg.icon} ${cfg.msg}</span>`:''}
+          ${entr?`<span class="tarea-entregada-badge">📬 Entregada ${t.fechaEntrega?formatDate(t.fechaEntrega):''} · <em>pendiente de nota</em></span>`:''}
           ${t.completada&&t.fechaEntrega?`<span class="tarea-entrega-badge">✓ ${formatDate(t.fechaEntrega)}</span>`:''}
           ${(t.etiquetas||[]).length ? renderEtiquetasChips(t.etiquetas) : ''}
           ${rbBadgeGlobal}
@@ -14075,7 +14538,7 @@ function exportarICS() {
   // 2. Fechas límite de tareas
   asignaturas.filter(a => !a.archivada).forEach(a => {
     (a.tareas||[]).filter(t => t.fechaLimite && !t.completada).forEach(t => {
-      const summary = `🎯 ${t.texto} — ${a.nombre}`;
+      const summary = `${tareaEntregada(t)?'📬 (Entregada) ':'🎯 '}${t.texto} — ${a.nombre}`;
       const desc = `Ponderación: ${t.ponderacion||'?'}%` + (t.horaLimite ? ` · Límite: ${t.horaLimite}` : '');
       const dtstart = icsDate(t.fechaLimite, t.horaLimite || null);
       const uid = `tarea-${t.id || a.id + '-' + t.texto.slice(0,10)}`;
@@ -14169,8 +14632,8 @@ function renderSemana() {
       if (!eventsByDay.hasOwnProperty(t.fechaLimite)) return;
       eventsByDay[t.fechaLimite].push({
         tipo: 'entrega', hora: t.horaLimite || '23:59',
-        titulo: t.texto, asig: a.nombre,
-        meta: `Ponderación: ${t.ponderacion||'?'}%`
+        titulo: (tareaEntregada(t)?'📬 ':'')+t.texto, asig: a.nombre,
+        meta: (tareaEntregada(t)?'Entregada · pendiente de nota · ':'')+`Ponderación: ${t.ponderacion||'?'}%`
       });
     });
   });
@@ -14265,19 +14728,24 @@ function renderHistorial() {
     });
   }
 
-  // Recopilar tareas completadas
+  // Recopilar tareas entregadas (completadas O con al menos una entrega registrada)
   let entregas = [];
   asignaturas.forEach(a => {
     if (filterAsig !== 'todas' && a.nombre !== filterAsig) return;
-    (a.tareas||[]).filter(t => t.completada).forEach(t => {
+    (a.tareas||[]).filter(t => t.completada || (t.historialEntregas && t.historialEntregas.length > 0)).forEach(t => {
       entregas.push({
         asig: a.nombre,
         texto: t.texto,
         fechaLimite: t.fechaLimite,
         fechaEntrega: t.fechaEntrega,
         nota: t.nota,
+        notaProvisional: t.notaProvisional,
         ponderacion: t.ponderacion,
         etiquetas: t.etiquetas || [],
+        completada: t.completada,
+        pendienteNota: t.pendienteNota,
+        pendienteModificaciones: t.pendienteModificaciones,
+        nEntregas: (t.historialEntregas||[]).length,
       });
     });
   });
@@ -14324,13 +14792,21 @@ function renderHistorial() {
       : notaNum < 5 ? 'mala' : notaNum < 7 ? 'media' : '';
     const notaStr = (e.nota !== null && e.nota !== undefined && e.nota !== '')
       ? `<span class="he-nota-badge ${notaCls}">${e.nota}</span>`
-      : `<span class="he-nota-badge sin">—</span>`;
+      : (e.notaProvisional != null ? `<span class="he-nota-badge sin" title="Nota provisional">${e.notaProvisional}⚠</span>` : `<span class="he-nota-badge sin">—</span>`);
     const etiqHtml = renderEtiquetasChips(e.etiquetas);
+    const estadoBadge = e.completada
+      ? `<span style="font-size:0.7rem;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:99px;padding:0.1rem 0.4rem">✅ Aprobada</span>`
+      : e.pendienteModificaciones
+        ? `<span style="font-size:0.7rem;color:#7c2d12;background:#ffedd5;border:1px solid #fed7aa;border-radius:99px;padding:0.1rem 0.4rem">🔧 Con modificaciones</span>`
+        : e.pendienteNota
+          ? `<span style="font-size:0.7rem;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:99px;padding:0.1rem 0.4rem">📬 Pendiente de nota</span>`
+          : '';
+    const reentregasBadge = e.nEntregas > 1 ? `<span style="font-size:0.68rem;color:#6d28d9;margin-left:0.3rem">(${e.nEntregas} entregas)</span>` : '';
     return `<tr>
       <td><span class="he-asig-badge">${e.asig}</span></td>
       <td>
         <div style="font-weight:500">${e.texto}</div>
-        ${etiqHtml ? `<div style="margin-top:0.25rem">${etiqHtml}</div>` : ''}
+        <div style="margin-top:0.2rem;display:flex;flex-wrap:wrap;gap:0.3rem;align-items:center">${estadoBadge}${reentregasBadge}${etiqHtml ? etiqHtml : ''}</div>
       </td>
       <td style="text-align:center">${formatDate(e.fechaLimite)}</td>
       <td style="text-align:center">${formatDate(e.fechaEntrega) || '—'}</td>
@@ -14342,14 +14818,70 @@ function renderHistorial() {
   tableWrap.innerHTML = `<table class="historial-entregas-table">
     <thead><tr>
       <th>Asignatura</th>
-      <th>Tarea</th>
+      <th>Tarea / Estado</th>
       <th style="text-align:center">Fecha límite</th>
-      <th style="text-align:center">Entregada</th>
+      <th style="text-align:center">Última entrega</th>
       <th style="text-align:center">Ponderación</th>
       <th style="text-align:center">Nota</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
+
+  // Render per-asignatura activity breakdown
+  const porAsigEl = document.getElementById('historial-por-asig');
+  if (porAsigEl) {
+    const asigsFilt = asignaturas.filter(a => filterAsig === 'todas' || a.nombre === filterAsig);
+    const asigCards = asigsFilt.map(a => {
+      const tareasConHistorial = (a.tareas||[]).filter(t =>
+        t.completada || (t.historialEntregas && t.historialEntregas.length > 0)
+      );
+      if (!tareasConHistorial.length) return '';
+      const tareaRows = tareasConHistorial.map(t => {
+        // Build merged timeline
+        const items = [];
+        (t.historialEntregas||[]).forEach(e => items.push({
+          ts: e.ts || e.fecha || '',
+          icon: e.tipo === 'reentrega' ? '📬' : '📤',
+          label: e.tipo === 'reentrega' ? 'Re-entrega' : 'Entrega',
+          fecha: e.fecha,
+          extra: ''
+        }));
+        (t.historialNotas||[]).forEach(n => items.push({
+          ts: n.ts || n.fecha || '',
+          icon: n.estado === 'modificaciones' ? '🔧' : '✅',
+          label: n.estado === 'modificaciones' ? 'Pendiente de modificaciones' : 'Aprobada',
+          fecha: n.fecha,
+          extra: ` · <strong>${n.nota}/10</strong>`
+        }));
+        items.sort((a,b) => (a.ts||'').localeCompare(b.ts||''));
+        if (!items.length) return '';
+        const timeline = items.map(it =>
+          `<div style="font-size:0.78rem;color:var(--text-muted);padding:0.15rem 0;border-left:2px solid var(--border);padding-left:0.5rem;margin-left:0.3rem">${it.icon} <strong>${formatDate(it.fecha)}</strong> · ${it.label}${it.extra}</div>`
+        ).join('');
+        const estadoBadge = t.completada
+          ? `<span style="font-size:0.68rem;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:99px;padding:0.08rem 0.35rem">✅ Aprobada · ${t.nota}/10</span>`
+          : t.pendienteModificaciones
+            ? `<span style="font-size:0.68rem;color:#7c2d12;background:#ffedd5;border:1px solid #fed7aa;border-radius:99px;padding:0.08rem 0.35rem">🔧 Con modificaciones${t.notaProvisional!=null?' · '+t.notaProvisional+'/10':''}</span>`
+            : t.pendienteNota
+              ? `<span style="font-size:0.68rem;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:99px;padding:0.08rem 0.35rem">📬 Pendiente de nota</span>`
+              : '';
+        return `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:flex-start;gap:0.5rem;flex-wrap:wrap">
+            <span style="font-weight:500;font-size:0.85rem;flex:1">${t.texto}</span>
+            ${estadoBadge}
+            ${t.ponderacion!=null?`<span style="font-size:0.68rem;background:#ede9fe;color:#6d28d9;border:1px solid #c4b5fd;border-radius:99px;padding:0.08rem 0.35rem">⚖️ ${t.ponderacion}%</span>`:''}
+          </div>
+          <div style="margin-top:0.35rem">${timeline}</div>
+        </div>`;
+      }).filter(Boolean).join('');
+      if (!tareaRows) return '';
+      return `<div class="card mb-2" style="padding:0.8rem 1rem">
+        <div style="font-weight:600;font-size:0.9rem;color:var(--green-dark);margin-bottom:0.5rem">${a.nombre}</div>
+        ${tareaRows}
+      </div>`;
+    }).filter(Boolean).join('');
+    porAsigEl.innerHTML = asigCards || `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No hay entregas registradas para esta asignatura.</div></div>`;
+  }
 }
 
 function init() {
