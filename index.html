@@ -3238,40 +3238,8 @@ function load() {
     localStorage.setItem('master_name', masterName);
     return;
   }
-  // Merge v2: actualizar horarios/tareas comparando por nombre (más robusto que por id)
-  // Solo se hace una vez por versión de backup (guardamos marca en localStorage)
-  const BACKUP_VERSION = '2026-10-19-v3';
-  const mergeHecho = localStorage.getItem('master_backup_merge');
-  if (mergeHecho !== BACKUP_VERSION) {
-    let merged = false;
-    asignaturas.forEach(a => {
-      // Buscar coincidencia por id o por nombre
-      const backup = BACKUP_INICIAL.asignaturas.find(b => b.id === a.id)
-                  || BACKUP_INICIAL.asignaturas.find(b => b.nombre === a.nombre);
-      if (!backup) return;
-      // Siempre reemplazar horarios con los del backup (tienen títulos completos)
-      if (backup.horarios && backup.horarios.length > 0) {
-        a.horarios = backup.horarios;
-        merged = true;
-      }
-      // Si no tiene tareas y el backup sí tiene, añadir las del backup
-      if ((a.tareas||[]).length === 0 && backup.tareas && backup.tareas.length > 0) {
-        a.tareas = backup.tareas;
-        merged = true;
-      }
-    });
-    // Merge actividades del backup que no existan ya (por id o por título)
-    const actBackup = BACKUP_INICIAL.actividades || [];
-    actBackup.forEach(ba => {
-      const existe = actividades.find(a => a.id === ba.id || a.titulo === ba.titulo);
-      if (!existe) { actividades.push(ba); merged = true; }
-    });
-    if (merged) {
-      localStorage.setItem('master_asignaturas', JSON.stringify(asignaturas));
-      localStorage.setItem('master_actividades', JSON.stringify(actividades));
-      localStorage.setItem('master_backup_merge', BACKUP_VERSION);
-    }
-  }
+  // (Eliminada la antigua migración que reemplazaba los horarios por los del backup embebido:
+  //  borraba asistencia, enlaces y sesiones añadidas en cualquier dispositivo sin la marca local.)
   try { actividades = JSON.parse(localStorage.getItem('master_actividades')) || []; } catch(e){ actividades=[]; }
   try { objetivos = JSON.parse(localStorage.getItem('master_objetivos')) || []; } catch(e){ objetivos=[]; }
   try { emailConfig = JSON.parse(localStorage.getItem('master_email_config')) || {}; } catch(e){ emailConfig={}; }
@@ -12168,6 +12136,7 @@ function renderAsigCard(a, i) {
             ${historialHTML}
             ${histNotasHTML}
             ${(t.enlaces||[]).length ? `<div class="tarea-enlaces">${(t.enlaces).map(e=>`<a href="${e.url}" target="_blank" rel="noopener" class="tarea-enlace-btn">${getEnlaceIcon(e.url)} ${e.label}</a>`).join('')}</div>` : ''}
+            ${/^https?:\/\//i.test(t.url||'') ? `<div class="tarea-enlaces"><a href="${String(t.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer" class="tarea-enlace-btn">🔗 Abrir enlace de la tarea</a></div>` : ''}
             ${renderSubtareasInline(t, i, ti)}
           </div>
           ${t.nota!==null&&t.nota!==''?`<span class="tarea-nota">${t.nota}/10</span>`:t.notaProvisional!=null?`<span class="tarea-nota" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">${t.notaProvisional}/10⚠</span>`:''}
@@ -12969,6 +12938,7 @@ function renderActividades() {
           ${a.asignaturaIdx!=null&&asignaturas[a.asignaturaIdx]?`<span style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;border-radius:99px;padding:0.1rem 0.5rem;font-size:0.71rem;max-width:14rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📚 ${asignaturas[a.asignaturaIdx].nombre}</span>`:''}
         </div>
         ${a.descripcion?`<div class="text-sm text-muted mt-1">${a.descripcion}</div>`:''}
+        ${/^https?:\/\//i.test(a.url||'')?`<a href="${String(a.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:0.3rem;font-size:0.8rem;font-weight:600;color:var(--green-dark);text-decoration:underline">🔗 Abrir enlace de la actividad</a>`:''}
         ${a.observaciones?`<div class="text-sm text-muted" style="font-style:italic">${a.observaciones}</div>`:''}
       </div>
       <div class="actividad-actions">
