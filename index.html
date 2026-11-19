@@ -3172,6 +3172,7 @@ const PROFESORES_CLAUSTRO = [
   'Dra. Laura Esteban Gonzalo',
   'Dr. Diego Ayuso Murillo',
   'D. Ignacio Garbisu Urdáiz',
+  'Dr. Fernando José García Hedrera',
 ];
 
 // Módulos del plan de estudios (del dossier oficial)
@@ -5391,7 +5392,7 @@ function generarInforme() {
   <div class="asig-grid">
     <div><span class="asig-label">Inicio:</span> ${fmtDate(a.fechaInicio)}</div>
     <div><span class="asig-label">Fin:</span> ${fmtDate(a.fechaFin)}</div>
-    <div><span class="asig-label">Profesor${getProfesorList(a).length>1?'es':''}:</span> ${getProfesorList(a).length>0?getProfesorList(a).map(p=>esc(p.nombre)).join(', '):'—'}</div>
+    <div><span class="asig-label">Profesor${getProfesorList(a).filter(p=>p.nombre).length>1?'es':''}:</span> ${getProfesorList(a).filter(p=>p.nombre).length>0?getProfesorList(a).filter(p=>p.nombre).map(p=>esc(p.nombre)).join(', '):'—'}</div>
     <div><span class="asig-label">ECTS:</span> ${a.ects||'—'}</div>
     <div><span class="asig-label">Entregas:</span> ${entrDone}/${entrTotal} completadas</div>
     <div><span class="asig-label">Temas:</span> ${tDone}/${tTotal}</div>
@@ -11921,14 +11922,15 @@ function _readProfesoresFromDetail(ai) {
     const nombre = getProfesorValue(`dsel-prof-${ai}-${pi}`, `dinp-prof-${ai}-${pi}`);
     const emailEl = document.getElementById(`demail-prof-${ai}-${pi}`);
     return { nombre, email: emailEl ? emailEl.value.trim() : p.email || '' };
-  }).filter(p => p.nombre.trim());
+  });
 }
 
 function _updateAsigProfesores(ai) {
   const profs = _readProfesoresFromDetail(ai);
   asignaturas[ai].profesores = profs;
-  asignaturas[ai].profesor = profs.length > 0 ? profs[0].nombre : '';
-  asignaturas[ai].emailProfesor = profs.length > 0 ? profs[0].email : '';
+  const conNombre = profs.filter(p => p.nombre.trim());
+  asignaturas[ai].profesor = conNombre.length > 0 ? conNombre[0].nombre : '';
+  asignaturas[ai].emailProfesor = conNombre.length > 0 ? conNombre[0].email : '';
   save();
 }
 
