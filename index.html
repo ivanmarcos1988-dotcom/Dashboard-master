@@ -11980,8 +11980,14 @@ let mostrarArchivadas = false;
 
 function renderAsignaturas() {
   const el = document.getElementById('asig-list');
-  const activas    = asignaturas.filter((a,i) => !a.archivada);
-  const archivadas = asignaturas.filter((a,i) =>  a.archivada);
+  // Orden por fecha de la primera clase de cada asignatura; sin clases, al final
+  const proxClase = a => {
+    const f = (a.horarios||[]).map(h => h.dia).filter(Boolean).sort();
+    return f.length ? f[0] : '9999-99-99';
+  };
+  const porFecha = (x, y) => proxClase(x).localeCompare(proxClase(y)) || asignaturas.indexOf(x) - asignaturas.indexOf(y);
+  const activas    = asignaturas.filter((a,i) => !a.archivada).sort(porFecha);
+  const archivadas = asignaturas.filter((a,i) =>  a.archivada).sort(porFecha);
 
   if (!asignaturas.length) {
     el.innerHTML = '<div class="empty-state card"><div class="empty-state-icon">📚</div><div class="empty-state-text">No hay asignaturas. Crea la primera.</div></div>';
@@ -12088,6 +12094,7 @@ function renderAsigCard(a, i) {
               <button class="btn btn-danger btn-sm btn-icon" onclick="deleteHorario(${i},${h._hi})" title="Eliminar">✕</button>
             </div>
             ${h.titulo ? `<div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">${h.titulo}</div>` : ''}
+            ${/^https?:\/\//i.test(h.url||'') ? `<a href="${String(h.url).replace(/"/g,'&quot;')}" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem;font-weight:600;color:var(--green-dark);text-decoration:underline">🔗 Abrir enlace de la clase</a>` : ''}
             ${h.observaciones ? `<div style="font-size:0.75rem;color:var(--text-muted);font-style:italic;background:var(--bg2);border-radius:var(--radius-sm);padding:0.3rem 0.5rem;width:100%">💡 ${h.observaciones}</div>` : ''}
           </div>`;
         }).join('')
