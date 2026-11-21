@@ -1842,6 +1842,7 @@ mark.hl{background:#fde68a;color:var(--ink);border-radius:2px;padding:0 1px}
   <button class="tab-btn" data-group="ajustes" style="display:none" onclick="showTab('info')">ℹ️ Info</button>
   <button class="tab-btn" data-group="archivo" style="display:none" onclick="exportarICS()">📆 Exportar calendario</button>
   <button class="tab-btn" data-group="archivo" style="display:none" onclick="exportarBackup()">⬇️ Exportar backup</button>
+  <button class="tab-btn" data-group="archivo" style="display:none" onclick="deshacerUltimaCopia()">↩️ Deshacer última importación</button>
   <button class="tab-btn" data-group="archivo" style="display:none" onclick="document.getElementById('import-file').click()">⬆️ Importar backup</button>
   <button class="tab-btn" data-group="archivo" style="display:none" onclick="generarInforme()">📊 Informe</button>
   <button class="tab-btn" data-group="archivo" style="display:none" onclick="imprimirEstado()">🖨️ Imprimir</button>
@@ -2734,6 +2735,7 @@ mark.hl{background:#fde68a;color:var(--ink);border-radius:2px;padding:0 1px}
         <select class="form-select" id="horario-asistencia">
           <option value="">— Sin registrar —</option>
           <option value="asistí">✅ Asistí</option>
+          <option value="diferido">🎥 Vista en diferido</option>
           <option value="no asistí">❌ No asistí</option>
           <option value="justificada">⚠️ Falta justificada</option>
         </select>
@@ -4819,6 +4821,12 @@ function getAlertLevel(days) {
 function tareaEntregada(t) {
   return !!(t && t.entregada && !t.completada && !t.pendienteModificaciones);
 }
+// Prefijo visual de una tarea en calendario/semana/ICS según su estado
+function tareaMarca(t) {
+  if (t.completada) return '✅ ';
+  if (tareaEntregada(t)) return '📬 ';
+  return '';
+}
 function alertConfig(level, days) {
   if (level === 'critical' && days === 0) return { cls:'alert-red', icon:'🔴', badge:'HOY', msg:'Entrega hoy' };
   switch(level) {
@@ -4864,13 +4872,28 @@ function renderPanelHoy() {
   });
   items.entregas.sort((a,b) => a.days - b.days);
 
+  // Tareas pendientes que no tienen fecha límite (no salen en calendario ni en alertas)
+  const sinFecha = [];
+  asignaturas.filter(a => !a.archivada && !a.convalidada).forEach(a => {
+    (a.tareas||[]).forEach(t => {
+      if (t.completada || tareaEntregada(t) || t.fechaLimite) return;
+      sinFecha.push({ asig: a.nombre, texto: t.texto });
+    });
+  });
+  const htmlSinFecha = sinFecha.length ? `
+    <div style="margin-top:0.6rem;padding:0.5rem 0.7rem;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg2)">
+      <div style="font-size:0.8rem;font-weight:600;margin-bottom:0.3rem">📅 ${sinFecha.length} tarea${sinFecha.length!==1?'s':''} sin fecha límite</div>
+      ${sinFecha.map(x => `<div style="font-size:0.78rem;color:var(--text-muted)">• ${x.texto} <span style="opacity:0.8">— ${x.asig}</span></div>`).join('')}
+      <div style="font-size:0.74rem;color:var(--text-muted);margin-top:0.3rem">Ponles fecha en Asignaturas → tarea → ✏️ para que salgan en el calendario y en los avisos.</div>
+    </div>` : '';
+
   const total = items.entregas.length;
-  const resumen = total === 0 ? 'Sin urgencias 🎉' : `${total} urgente${total !== 1 ? 's' : ''}`;
+  const resumen = total === 0 ? (sinFecha.length ? `Sin urgencias · ${sinFecha.length} sin fecha` : 'Sin urgencias 🎉') : `${total} urgente${total !== 1 ? 's' : ''}`;
   document.getElementById('hoy-resumen').textContent = resumen;
 
   if (total === 0) {
     document.getElementById('hoy-contenido').innerHTML =
-      `<div class="hoy-empty">🎉 Sin tareas urgentes para hoy. ¡Todo bajo control!</div>`;
+      `<div class="hoy-empty">🎉 Sin tareas urgentes para hoy. ¡Todo bajo control!</div>` + htmlSinFecha;
     return;
   }
 
@@ -4896,7 +4919,7 @@ function renderPanelHoy() {
     }).join('');
   }
 
-  document.getElementById('hoy-contenido').innerHTML = html;
+  document.getElementById('hoy-contenido').innerHTML = html + htmlSinFecha;
 }
 
 // ===================================================
@@ -10833,7 +10856,10 @@ function importarBackup(event) {
         toast('El archivo no parece una copia válida', 'error');
         return;
       }
-      if (!confirm(`¿Importar copia de seguridad del ${data.fecha ? new Date(data.fecha).toLocaleDateString('es-ES') : 'archivo'}?\n\nEsto reemplazará todos los datos actuales.`)) return;
+      const _perd = _perdidas(_resumenLocal(), _resumenDatos(data.asignaturas, data.actividades));
+      const _aviso = _perd.length ? `\n\n⚠️ OJO: esta copia tiene MENOS datos que los que tienes ahora:\n${_perd.join('\n')}\n` : '';
+      if (!confirm(`¿Importar copia de seguridad del ${data.fecha ? new Date(data.fecha).toLocaleDateString('es-ES') : 'archivo'}?\n\nEsto reemplazará todos los datos actuales.${_aviso}\nSe guardará antes una copia de lo actual por si quieres deshacer (Archivo → Deshacer última importación).`)) { event.target.value = ''; return; }
+      guardarCopiaPrevia('importar backup');
 
       asignaturas  = data.asignaturas  || [];
       actividades  = data.actividades  || [];
@@ -12029,6 +12055,63 @@ function archivarAsig(i) {
   toast('📦 Asignatura archivada');
 }
 
+// Resumen de asistencia: % de sesiones ya celebradas que has seguido (asistí + diferido)
+function htmlResumenAsistencia(a) {
+  const hoy = localDateStr(new Date());
+  const pasadas = (a.horarios||[]).filter(h => h.dia && h.dia <= hoy);
+  if (!pasadas.length) return '';
+  const c = { 'asistí':0, 'diferido':0, 'justificada':0, 'no asistí':0, '':0 };
+  pasadas.forEach(h => { c[h.asistencia || ''] = (c[h.asistencia || ''] || 0) + 1; });
+  const seguidas = c['asistí'] + c['diferido'];
+  const pct = Math.round(seguidas / pasadas.length * 100);
+  const color = pct >= 80 ? '#059669' : pct >= 50 ? '#d97706' : '#dc2626';
+  const partes = [];
+  if (c['asistí']) partes.push(`✅ ${c['asistí']} asistí`);
+  if (c['diferido']) partes.push(`🎥 ${c['diferido']} en diferido`);
+  if (c['justificada']) partes.push(`⚠️ ${c['justificada']} justificada${c['justificada']!==1?'s':''}`);
+  if (c['no asistí']) partes.push(`❌ ${c['no asistí']} no asistí`);
+  if (c['']) partes.push(`${c['']} sin registrar`);
+  return `<div style="font-size:0.8rem;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)">
+    <strong style="color:${color}">Asistencia: ${pct}%</strong>
+    <span style="color:var(--text-muted)"> (${seguidas} de ${pasadas.length} sesiones celebradas) · ${partes.join(' · ')}</span>
+  </div>`;
+}
+
+// Calculadora: qué media necesitas en las tareas que quedan para llegar a la nota objetivo
+function textoNotaObjetivo(a) {
+  const objetivo = parseFloat(a.notaObjetivo != null && a.notaObjetivo !== '' ? a.notaObjetivo : 7);
+  if (isNaN(objetivo)) return '';
+  const tareas = a.tareas || [];
+  const conNota = t => t.nota !== null && t.nota !== undefined && t.nota !== '' && !isNaN(parseFloat(t.nota));
+  const pond = t => (t.ponderacion != null && t.ponderacion !== '' && !isNaN(parseFloat(t.ponderacion))) ? parseFloat(t.ponderacion) : 0;
+  const acumulado = tareas.filter(conNota).reduce((s,t) => s + parseFloat(t.nota) * pond(t) / 100, 0);
+  const restantes = tareas.filter(t => !conNota(t));
+  const pesoRestante = restantes.reduce((s,t) => s + pond(t), 0);
+  const acum = acumulado.toFixed(2);
+  if (!tareas.some(t => pond(t) > 0)) return 'Esta asignatura no tiene ponderaciones en las tareas, así que no se puede calcular.';
+  if (acumulado >= objetivo) return `✅ Ya llevas <strong>${acum}</strong> puntos: objetivo de ${objetivo} conseguido, aunque saques 0 en lo que queda.`;
+  if (pesoRestante <= 0) return `Llevas <strong>${acum}</strong> y no quedan tareas con peso: no llegarías a ${objetivo}.`;
+  const necesaria = (objetivo - acumulado) / (pesoRestante / 100);
+  if (necesaria > 10) return `Llevas <strong>${acum}</strong> puntos. Para llegar a ${objetivo} necesitarías un <strong>${necesaria.toFixed(2)}</strong> de media en el ${Math.round(pesoRestante)}% restante: no es posible (máximo 10).`;
+  return `Llevas <strong>${acum}</strong> puntos. Para llegar a ${objetivo} necesitas una media de <strong>${necesaria.toFixed(2)}</strong> en el ${Math.round(pesoRestante)}% restante (${restantes.length} tarea${restantes.length!==1?'s':''}).`;
+}
+function actualizarNotaObjetivo(i, v) {
+  const n = parseFloat(String(v).replace(',', '.'));
+  asignaturas[i].notaObjetivo = (isNaN(n) || n < 0) ? 7 : Math.min(n, 10);
+  save();
+  const el = document.getElementById('nota-obj-texto-' + i);
+  if (el) el.innerHTML = textoNotaObjetivo(asignaturas[i]);
+}
+function htmlNotaObjetivo(a, i) {
+  const obj = a.notaObjetivo != null && a.notaObjetivo !== '' ? a.notaObjetivo : 7;
+  return `<div class="asig-section-title">🎯 Nota objetivo</div>
+    <div style="font-size:0.85rem;padding:0.5rem 0.7rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;font-size:0.8rem;color:var(--text-muted)">Quiero sacar
+        <input class="form-input" type="number" min="0" max="10" step="0.1" value="${obj}" style="width:4.5rem" onchange="actualizarNotaObjetivo(${i},this.value)"> de nota final</label>
+      <div id="nota-obj-texto-${i}">${textoNotaObjetivo(a)}</div>
+    </div>`;
+}
+
 function renderAsigCard(a, i) {
   const pct = calcProgress(a);
   const media = calcMedia(a);
@@ -12043,6 +12126,8 @@ function renderAsigCard(a, i) {
           const diaCap = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
           const asistBadge = h.asistencia === 'asistí'
             ? `<span style="font-size:0.72rem;font-weight:600;color:#059669;background:#d1fae5;border:1px solid #6ee7b7;border-radius:99px;padding:0.1rem 0.5rem">✅ Asistí</span>`
+            : h.asistencia === 'diferido'
+            ? `<span style="font-size:0.72rem;font-weight:600;color:#1d4ed8;background:#dbeafe;border:1px solid #93c5fd;border-radius:99px;padding:0.1rem 0.5rem">🎥 En diferido</span>`
             : h.asistencia === 'no asistí'
             ? `<span style="font-size:0.72rem;font-weight:600;color:#dc2626;background:#fee2e2;border:1px solid #fca5a5;border-radius:99px;padding:0.1rem 0.5rem">❌ No asistí</span>`
             : h.asistencia === 'justificada'
@@ -12232,6 +12317,7 @@ function renderAsigCard(a, i) {
       <div id="temas-preview-${i}" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem">${(()=>{const unis=migrateToUnidades(a);const tot=unis.reduce((s,u)=>s+(u.temas||[]).length,0);const don=unis.reduce((s,u)=>s+(u.temas||[]).filter(t=>t.done).length,0);return tot?`${unis.length} unidad${unis.length!==1?'es':''}, ${don}/${tot} temas completados`:'Sin temario definido';})()}</div>
 
       <div class="asig-section-title">Horarios de clase</div>
+      ${htmlResumenAsistencia(a)}
       <div id="horarios-${i}">${horariosHTML}</div>
       <button class="btn btn-secondary btn-sm mt-1" onclick="openHorarioModal(${i})">+ Añadir horario</button>
 
@@ -12240,6 +12326,8 @@ function renderAsigCard(a, i) {
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.4rem">
         <button class="btn btn-secondary btn-sm" onclick="openTareaModal(${i})">+ Añadir tarea</button>
       </div>
+
+      ${htmlNotaObjetivo(a, i)}
 
     </div>
   </div>`;
@@ -12484,7 +12572,7 @@ function deleteHorario(asigIdx, horarioIdx) {
 
 function toggleAsistencia(asigIdx, horarioIdx) {
   const h = asignaturas[asigIdx].horarios[horarioIdx];
-  const ciclo = ['', 'asistí', 'no asistí', 'justificada'];
+  const ciclo = ['', 'asistí', 'diferido', 'no asistí', 'justificada'];
   const actual = ciclo.indexOf(h.asistencia || '');
   h.asistencia = ciclo[(actual + 1) % ciclo.length];
   save();
@@ -12493,7 +12581,7 @@ function toggleAsistencia(asigIdx, horarioIdx) {
     const body = document.getElementById('asig-body-' + asigIdx);
     if (body && !body.classList.contains('open')) toggleAsig(asigIdx);
   }, 50);
-  const labels = { '': 'Sin registrar', 'asistí': '✅ Asistí', 'no asistí': '❌ No asistí', 'justificada': '⚠️ Justificada' };
+  const labels = { '': 'Sin registrar', 'asistí': '✅ Asistí', 'diferido': '🎥 Vista en diferido', 'no asistí': '❌ No asistí', 'justificada': '⚠️ Justificada' };
   toast(labels[h.asistencia] || 'Asistencia actualizada', 'info');
 }
 
@@ -13178,7 +13266,7 @@ function getCalEvents() {
       add(h.dia, 'clase', a.nombre, h.horaInicio ? h.horaInicio + (h.horaFin ? '–'+h.horaFin : '') : '');
     });
     (a.tareas||[]).forEach(t => {
-      if (!t.completada && t.fechaLimite) add(t.fechaLimite, 'entrega', (tareaEntregada(t)?'📬 ':'')+t.texto+(tareaEntregada(t)?' (entregada)':''), '');
+      if (t.fechaLimite) add(t.fechaLimite, 'entrega', tareaMarca(t)+t.texto+(t.completada?' (hecha'+(t.nota!=null&&t.nota!==''?', nota '+t.nota:'')+')':tareaEntregada(t)?' (entregada)':''), '');
     });
   });
   actividades.forEach(a => {
@@ -14516,8 +14604,8 @@ function exportarICS() {
 
   // 2. Fechas límite de tareas
   asignaturas.filter(a => !a.archivada).forEach(a => {
-    (a.tareas||[]).filter(t => t.fechaLimite && !t.completada).forEach(t => {
-      const summary = `${tareaEntregada(t)?'📬 (Entregada) ':'🎯 '}${t.texto} — ${a.nombre}`;
+    (a.tareas||[]).filter(t => t.fechaLimite).forEach(t => {
+      const summary = `${t.completada?'✅ (Hecha) ':tareaEntregada(t)?'📬 (Entregada) ':'🎯 '}${t.texto} — ${a.nombre}`;
       const desc = `Ponderación: ${t.ponderacion||'?'}%` + (t.horaLimite ? ` · Límite: ${t.horaLimite}` : '');
       const dtstart = icsDate(t.fechaLimite, t.horaLimite || null);
       const uid = `tarea-${t.id || a.id + '-' + t.texto.slice(0,10)}`;
@@ -14607,12 +14695,12 @@ function renderSemana() {
 
   // Fechas límite de tareas
   asignaturas.filter(a => !a.archivada).forEach(a => {
-    (a.tareas||[]).filter(t => !t.completada && t.fechaLimite).forEach(t => {
+    (a.tareas||[]).filter(t => t.fechaLimite).forEach(t => {
       if (!eventsByDay.hasOwnProperty(t.fechaLimite)) return;
       eventsByDay[t.fechaLimite].push({
         tipo: 'entrega', hora: t.horaLimite || '23:59',
-        titulo: (tareaEntregada(t)?'📬 ':'')+t.texto, asig: a.nombre,
-        meta: (tareaEntregada(t)?'Entregada · pendiente de nota · ':'')+`Ponderación: ${t.ponderacion||'?'}%`
+        titulo: tareaMarca(t)+t.texto, asig: a.nombre,
+        meta: (t.completada?'Hecha'+(t.nota!=null&&t.nota!==''?' · nota '+t.nota:'')+' · ':tareaEntregada(t)?'Entregada · pendiente de nota · ':'')+`Ponderación: ${t.ponderacion||'?'}%`
       });
     });
   });
@@ -15423,6 +15511,61 @@ function _gSetLabel(txt) {
 }
 
 // ── Recopilar todos los datos del dashboard ────────────
+// ── Protección de datos: resumen, aviso y copia previa ──
+function _resumenDatos(asigs, acts) {
+  const r = { sesiones:0, asistencias:0, enlaces:0, notas:0, entregas:0, actividades:0 };
+  (asigs||[]).forEach(a => {
+    (a.horarios||[]).forEach(h => { r.sesiones++; if (h.asistencia) r.asistencias++; if (h.url) r.enlaces++; });
+    (a.tareas||[]).forEach(t => {
+      if (t.url) r.enlaces++;
+      r.enlaces += (t.enlaces||[]).length;
+      if (t.nota !== null && t.nota !== undefined && t.nota !== '') r.notas++;
+      if (t.entregada || (t.historialEntregas||[]).length) r.entregas++;
+    });
+  });
+  (acts||[]).forEach(x => { r.actividades++; if (x.url) r.enlaces++; });
+  return r;
+}
+function _resumenLocal() {
+  let a = [], b = [];
+  try { a = JSON.parse(localStorage.getItem('master_asignaturas')) || []; } catch(e){}
+  try { b = JSON.parse(localStorage.getItem('master_actividades')) || []; } catch(e){}
+  return _resumenDatos(a, b);
+}
+function _resumenDrive(data) {
+  let a = [], b = [];
+  try { a = JSON.parse(data.master_asignaturas) || []; } catch(e){}
+  try { b = JSON.parse(data.master_actividades) || []; } catch(e){}
+  return _resumenDatos(a, b);
+}
+// Devuelve la lista de cosas que se perderían (vacía si el nuevo conjunto no tiene menos que el actual)
+function _perdidas(actual, nuevo) {
+  const nombres = { sesiones:'Sesiones', asistencias:'Asistencias registradas', enlaces:'Enlaces', notas:'Notas', entregas:'Entregas', actividades:'Actividades' };
+  const out = [];
+  Object.keys(nombres).forEach(k => { if (nuevo[k] < actual[k]) out.push(`• ${nombres[k]}: ${actual[k]} → ${nuevo[k]}`); });
+  return out;
+}
+function guardarCopiaPrevia(motivo) {
+  try {
+    const lista = JSON.parse(localStorage.getItem('master_copias_previas') || '[]');
+    lista.unshift({ fecha: new Date().toISOString(), motivo, data: gdriveCollectData() });
+    while (lista.length > 3) lista.pop();
+    try { localStorage.setItem('master_copias_previas', JSON.stringify(lista)); }
+    catch(e) { localStorage.setItem('master_copias_previas', JSON.stringify(lista.slice(0,1))); }
+  } catch(e) { console.error('No se pudo guardar la copia previa', e); }
+}
+function deshacerUltimaCopia() {
+  let lista = [];
+  try { lista = JSON.parse(localStorage.getItem('master_copias_previas') || '[]'); } catch(e){}
+  if (!lista.length) { toast('No hay ninguna copia previa guardada', 'error'); return; }
+  const c = lista[0];
+  const f = new Date(c.fecha).toLocaleString('es-ES');
+  if (!confirm(`¿Deshacer y volver a los datos que tenías antes de "${c.motivo}"?\n\nCopia del: ${f}\n\nSe sustituirán los datos actuales.`)) return;
+  gdriveRestoreData(c.data);
+  toast('↩️ Datos anteriores recuperados. Recargando…', 'success');
+  setTimeout(() => location.reload(), 1200);
+}
+
 function gdriveCollectData() {
   const keys = [
     'master_asignaturas','master_actividades','master_objetivos',
@@ -15495,6 +15638,7 @@ function _gShowMenu() {
   const items = [
     { icon:'☁️', label:'Subir a Drive (guardar)', fn:'gdrivePush' },
     { icon:'📥', label:'Bajar de Drive (restaurar)', fn:'gdrivePull' },
+    { icon:'↩️', label:'Deshacer última restauración', fn:'deshacerUltimaCopia' },
     { icon:'🔄', label:'Sincronización automática', fn:'gdriveToggleAuto', extra: localStorage.getItem('gdrive_auto')==='1' ? ' ✓' : '' },
     { icon:'🔓', label:'Desconectar', fn:'gdriveDisconnect' },
   ];
@@ -15532,13 +15676,32 @@ async function _gFindFile() {
 }
 
 // ── Subir datos a Drive ────────────────────────────────
-async function gdrivePush() {
-  if (!_gToken) { gdriveAuth(); return; }
+async function gdrivePush(auto) {
+  if (!_gToken) { if (auto !== true) gdriveAuth(); return; }
   _gSetStatus('Subiendo…', 'var(--text-muted)');
   try {
     const payload = JSON.stringify(gdriveCollectData(), null, 2);
     const blob = new Blob([payload], { type: 'application/json' });
     const existing = await _gFindFile();
+
+    // Protección: no machacar en Drive una copia con más datos que la de este dispositivo
+    if (existing) {
+      try {
+        const rd = await fetch(`https://www.googleapis.com/drive/v3/files/${existing.id}?alt=media`, { headers: { Authorization: 'Bearer ' + _gToken } });
+        const dd = await rd.json();
+        const perd = _perdidas(_resumenDrive(dd), _resumenLocal());
+        if (perd.length) {
+          if (auto === true) {
+            _gSetStatus('Auto-sync pausado: Drive tiene más datos', 'var(--danger,#dc2626)');
+            return;
+          }
+          if (!confirm(`⚠️ La copia de Drive tiene MÁS datos que este dispositivo:\n${perd.join('\n')}\n\nSi subes ahora, esos datos se perderán en Drive.\n\n¿Subir de todos modos?`)) {
+            _gSetStatus('Subida cancelada', 'var(--text-muted)');
+            return;
+          }
+        }
+      } catch(e) { console.warn('No se pudo comparar con Drive', e); }
+    }
 
     let url, method;
     if (existing) {
@@ -15590,9 +15753,12 @@ async function gdrivePull() {
     const data = await r.json();
 
     const fecha = new Date(data._date || file.modifiedTime).toLocaleString('es-ES');
-    if (!confirm(`¿Restaurar datos desde Drive?\n\nBackup del: ${fecha}\n\nSe sobreescribirán los datos locales.`)) {
+    const _perdD = _perdidas(_resumenLocal(), _resumenDrive(data));
+    const _avisoD = _perdD.length ? `\n\n⚠️ OJO: la copia de Drive tiene MENOS datos que este dispositivo:\n${_perdD.join('\n')}\n` : '';
+    if (!confirm(`¿Restaurar datos desde Drive?\n\nBackup del: ${fecha}\n\nSe sobreescribirán los datos locales.${_avisoD}\nSe guardará antes una copia de lo actual por si quieres deshacer.`)) {
       _gSetStatus('Cancelado', 'var(--text-muted)'); return;
     }
+    guardarCopiaPrevia('bajar de Drive');
 
     gdriveRestoreData(data);
     _gSetStatus('Restaurado ✓', 'var(--green-dark,#166534)');
@@ -15630,7 +15796,7 @@ function gdriveDisconnect() {
       if (localStorage.getItem('gdrive_auto') === '1' && _gToken && Date.now() < _gTokenExpiry) {
         // Debounce: esperar 3s de inactividad antes de subir
         clearTimeout(window._gAutoSaveTimer);
-        window._gAutoSaveTimer = setTimeout(gdrivePush, 3000);
+        window._gAutoSaveTimer = setTimeout(() => gdrivePush(true), 3000);
       }
     };
   }
