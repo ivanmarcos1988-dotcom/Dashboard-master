@@ -13256,21 +13256,35 @@ function renderCalendario() {
 // Build a flat list of all events { dateStr, type, label, timeStr }
 function getCalEvents() {
   const events = {};
-  function add(dateStr, type, label, timeStr) {
+  function add(dateStr, type, label, timeStr, tip) {
     if (!dateStr) return;
     if (!events[dateStr]) events[dateStr] = [];
-    events[dateStr].push({ type, label, timeStr: timeStr||'' });
+    events[dateStr].push({ type, label, timeStr: timeStr||'', tip: tip||'' });
+  }
+  // Texto del globo al pasar el ratón por una tarea: fecha límite, estado y nota
+  function tipTarea(a, t) {
+    const l = [t.texto, 'Asignatura: ' + a.nombre];
+    l.push('Fecha límite: ' + formatDate(t.fechaLimite) + (t.horaLimite ? ' a las ' + t.horaLimite : ''));
+    if (t.completada) l.push('Estado: hecha' + (t.fechaEntrega ? ' (entregada el ' + formatDate(t.fechaEntrega) + ')' : ''));
+    else if (tareaEntregada(t)) l.push('Estado: entregada' + (t.fechaEntrega ? ' el ' + formatDate(t.fechaEntrega) : '') + ' · pendiente de nota');
+    else l.push('Estado: pendiente');
+    const conNota = t.nota !== null && t.nota !== undefined && t.nota !== '';
+    if (conNota) l.push('Nota: ' + t.nota + (t.ponderacion != null && t.ponderacion !== '' ? ' (peso ' + t.ponderacion + '%)' : ''));
+    else if (t.notaProvisional != null && t.notaProvisional !== '') l.push('Nota provisional: ' + t.notaProvisional);
+    else l.push('Nota: sin nota' + (t.ponderacion != null && t.ponderacion !== '' ? ' (peso ' + t.ponderacion + '%)' : ''));
+    return l.join('\n');
   }
   asignaturas.forEach(a => {
     (a.horarios||[]).forEach(h => {
       add(h.dia, 'clase', a.nombre, h.horaInicio ? h.horaInicio + (h.horaFin ? '–'+h.horaFin : '') : '');
     });
     (a.tareas||[]).forEach(t => {
-      if (t.fechaLimite) add(t.fechaLimite, 'entrega', tareaMarca(t)+t.texto+(t.completada?' (hecha'+(t.nota!=null&&t.nota!==''?', nota '+t.nota:'')+')':tareaEntregada(t)?' (entregada)':''), '');
+      if (t.fechaLimite) add(t.fechaLimite, 'entrega', tareaMarca(t)+t.texto+(t.completada?' (hecha'+(t.nota!=null&&t.nota!==''?', nota '+t.nota:'')+')':tareaEntregada(t)?' (entregada)':''), '', tipTarea(a, t));
     });
   });
   actividades.forEach(a => {
-    if (a.estado !== 'cancelada') add(a.fecha, 'actividad', a.titulo, a.hora||'');
+    if (a.estado !== 'cancelada') add(a.fecha, 'actividad', a.titulo, a.hora||'',
+      [a.titulo, 'Fecha: ' + formatDate(a.fecha) + (a.hora ? ' a las ' + a.hora : ''), a.lugar ? 'Lugar: ' + a.lugar : '', 'Estado: ' + (a.estado || 'pendiente')].filter(Boolean).join('\n'));
   });
   objetivos.forEach(obj => {
     if (obj.fecha) {
@@ -13329,7 +13343,7 @@ function renderCalMonth() {
 
     html += `<div class="cal-day ${!isThisMonth?'other-month':''} ${isToday?'today':''}">
       <div class="cal-day-num">${date.getDate()}</div>
-      ${shown.map(e => `<span class="cal-event cal-event-${e.type}" title="${e.label}${e.timeStr?' ('+e.timeStr+')':''}">${e.timeStr?e.timeStr+' ':''}${e.label}</span>`).join('')}
+      ${shown.map(e => `<span class="cal-event cal-event-${e.type}" title="${(e.tip||e.label+(e.timeStr?' ('+e.timeStr+')':'')).replace(/"/g,'&quot;')}">${e.timeStr?e.timeStr+' ':''}${e.label}</span>`).join('')}
       ${more > 0 ? `<span class="cal-event-more">+${more} más</span>` : ''}
     </div>`;
   }
@@ -13384,7 +13398,7 @@ function renderCalWeek() {
     ${weekDays.map(wd => {
       const dayEvts = (events[wd.dateStr]||[]).filter(e => !e.timeStr);
       return `<div class="cal-week-allday-cell">
-        ${dayEvts.map(e=>`<span class="cal-event cal-event-${e.type}" style="display:block" title="${e.label}">${e.label}</span>`).join('')}
+        ${dayEvts.map(e=>`<span class="cal-event cal-event-${e.type}" style="display:block" title="${(e.tip||e.label).replace(/"/g,'&quot;')}">${e.label}</span>`).join('')}
       </div>`;
     }).join('')}
   </div>`;
@@ -13409,7 +13423,7 @@ function renderCalWeek() {
       const topPx    = (sh - HOUR_START) * 48 + (sm||0) / 60 * 48;
       const heightPx = endPart ? ((endPart[0] - sh) * 48 + ((endPart[1]||0) - (sm||0)) / 60 * 48) : 24;
       const safeH    = Math.max(heightPx, 18);
-      html += `<div class="cal-week-event cal-event-${e.type}" style="top:${topPx}px;height:${safeH}px" title="${e.label}">${e.label}</div>`;
+      html += `<div class="cal-week-event cal-event-${e.type}" style="top:${topPx}px;height:${safeH}px" title="${(e.tip||e.label).replace(/"/g,'&quot;')}">${e.label}</div>`;
     });
 
     html += `</div>`;
